@@ -1,16 +1,31 @@
 package view;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Image;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.*;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
+
 import app.NavigationController;
 
 public class SidebarPanel extends JPanel {
-    // Đường dẫn trỏ tới file logo.png trong thư mục src/main/resources/logo.png
     private static final String LOGO_PATH = "/logo.png"; 
 
     private Map<String, JButton> mainButtons = new LinkedHashMap<>();
@@ -25,7 +40,7 @@ public class SidebarPanel extends JPanel {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, AppTheme.BORDER));
 
-        // 1. TOP: KHU VỰC CHỈ HIỂN THỊ LOGO (Đã xóa bỏ text và icon mẫu)
+        // 1. TOP: KHU VỰC CHỈ HIỂN THỊ LOGO
         JPanel logoPanel = new JPanel();
         logoPanel.setOpaque(false);
         logoPanel.setPreferredSize(new Dimension(260, 100));
@@ -34,12 +49,11 @@ public class SidebarPanel extends JPanel {
         JLabel lblLogoImage = new JLabel();
         boolean loadedImage = false;
 
-        // Tải ảnh logo từ thư mục resources
+        // Tải logo từ thư mục resources
         try {
             URL imgUrl = getClass().getResource(LOGO_PATH);
             if (imgUrl != null) {
                 ImageIcon icon = new ImageIcon(imgUrl);
-                // Cân chỉnh kích thước ảnh logo cho phù hợp với chiều rộng Sidebar (vd: rộng 160px, cao 70px)
                 Image img = icon.getImage().getScaledInstance(160, 70, Image.SCALE_SMOOTH);
                 lblLogoImage.setIcon(new ImageIcon(img));
                 loadedImage = true;
