@@ -24,21 +24,27 @@ public class MainFrame extends JFrame {
 
         cardLayout = new CardLayout();
         contentPanel = new JPanel(cardLayout);
-
+        contentPanel.setBackground(AppTheme.MAIN_BG);
+        
+        
         // Đăng ký các màn hình vào CardLayout
         contentPanel.add(new DashboardPanel(), "DASHBOARD");
-        contentPanel.add(new PlaceholderPanel("BÁN HÀNG"), "POS");
+        contentPanel.add(new CustomerManagementPanel(), "CUSTOMERS");
+        contentPanel.add(new PlaceholderPanel("QUẢN LÝ THÚ CƯNG"), "PETS");
+        contentPanel.add(new PlaceholderPanel("QUẢN LÝ LOẠI SẢN PHẨM"), "PRODUCT_TYPES");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ SẢN PHẨM"), "PRODUCTS");
         contentPanel.add(new ServiceManagementPanel(), "SERVICES");
-        contentPanel.add(new PlaceholderPanel("NHẬP HÀNG"), "IMPORT");
-        contentPanel.add(new PlaceholderPanel("QUẢN LÝ KHÁCH HÀNG"), "CUSTOMERS");
-        contentPanel.add(new PlaceholderPanel("QUẢN LÝ THÚ CƯNG"), "PETS");
-        contentPanel.add(new PlaceholderPanel("QUẢN LÝ LỊCH HẸN CHĂM SÓC"), "APPOINTMENTS");
+        contentPanel.add(new PlaceholderPanel("QUẢN LÝ LỊCH HẸN"), "APPOINTMENTS");
         contentPanel.add(new PlaceholderPanel("LỊCH SỬ CHĂM SÓC"), "HISTORY");
-        contentPanel.add(new PlaceholderPanel("HOÁ ĐƠN"), "INVOICES");
+        contentPanel.add(new PlaceholderPanel("BÁN HÀNG & THANH TOÁN"), "POS");
+        contentPanel.add(new PlaceholderPanel("TRA CỨU HÓA ĐƠN"), "INVOICES");
+        contentPanel.add(new PlaceholderPanel("PHIẾU TRẢ HÀNG & HOÀN TIỀN"), "RETURNS");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ NHÂN VIÊN"), "EMPLOYEES");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ TÀI KHOẢN"), "ACCOUNTS");
-        contentPanel.add(new PlaceholderPanel("THỐNG KÊ & BÁO CÁO"), "STATISTICS");
+        contentPanel.add(new PlaceholderPanel("THỐNG KÊ DOANH THU"), "STAT_REVENUE");
+        contentPanel.add(new PlaceholderPanel("THỐNG KÊ SỐ LƯỢNG SẢN PHẨM"), "STAT_PRODUCTS");
+        contentPanel.add(new PlaceholderPanel("THỐNG KÊ LƯỢT DỊCH VỤ"), "STAT_SERVICES");
+        contentPanel.add(new PlaceholderPanel("BÁO CÁO TỒN KHO"), "STAT_INVENTORY");
 
         // Khởi tạo NavigationController
         navController = new NavigationController(cardLayout, contentPanel, sidebarPanel, headerPanel);
@@ -46,6 +52,7 @@ public class MainFrame extends JFrame {
 
         // Bố trí cục bộ MainFrame
         JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBackground(AppTheme.MAIN_BG);
         rightPanel.add(headerPanel, BorderLayout.NORTH);
         rightPanel.add(contentPanel, BorderLayout.CENTER);
 
