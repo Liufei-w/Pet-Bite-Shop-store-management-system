@@ -6,7 +6,7 @@ import javax.swing.*;
 public class HeaderPanel extends JPanel {
     private static final int HEADER_HEIGHT  = 96;
     private static final int LEFT_PADDING   = 36;
-    private static final int RIGHT_PADDING  = 130; // khoảng cách avatar tới mép phải (theo ảnh); giảm nếu muốn sát lề hơn
+    private static final int RIGHT_PADDING  = 80;
 
     private static final Color SUBTITLE_COLOR = new Color(0x7A, 0x8C, 0xA0);
     private static final Color TODAY_BG       = new Color(0xED, 0xF1, 0xF5);

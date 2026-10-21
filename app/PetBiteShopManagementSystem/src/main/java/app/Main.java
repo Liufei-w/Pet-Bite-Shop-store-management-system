@@ -1,6 +1,6 @@
 package app;
 
-import javax.swing.SwingUtilities;
+import javax.swing.SwingUtilities; 
 import view.MainFrame;
 
 public class Main {

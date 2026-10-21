@@ -21,7 +21,7 @@ public class SidebarPanel extends JPanel {
     private static final int ITEM_HEIGHT   = 38;
     private static final int FOOTER_ITEM_H = 34;
 
-    // Màu & font riêng cho sidebar (khớp ảnh thiết kế)
+    // Màu & font cho sidebar
     private static final Color MENU_TEXT  = new Color(0xDC, 0xE6, 0xF0); // chữ menu thường
     private static final Color MENU_TITLE = new Color(0x8F, 0xA9, 0xC4); // "MENU CHÍNH"
     private static final Color DOT_COLOR  = new Color(0xA9, 0xBC, 0xCF); // chấm tròn chưa active

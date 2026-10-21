@@ -62,7 +62,7 @@ public class CustomerManagementPanel extends JPanel {
         northWrapper.add(toolbar, BorderLayout.CENTER);
         add(northWrapper, BorderLayout.NORTH);
 
-        // Table Data khớp theo báo cáo Nhóm 10
+        // Table Data mẫu
         String[] columns = {"Mã KH", "Họ và tên", "Giới tính", "Ngày sinh", "SĐT", "Email", "Địa chỉ", "Trạng thái", "Thao tác"};
         Object[][] data = {
             {"KH241018001", "Nguyễn Minh Anh", "Nữ", "12/05/2002", "0903123456", "minhanh@gmail.com", "12 Nguyễn Trãi, Q.5", "Hoạt động", "Sửa"},
