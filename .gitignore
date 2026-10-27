@@ -1,0 +1,6 @@
+# Bỏ qua cấu hình workspace Eclipse
+.metadata/
+**/.metadata/
+
+# Bỏ qua file tạm Microsoft Word
+~$*.docx
