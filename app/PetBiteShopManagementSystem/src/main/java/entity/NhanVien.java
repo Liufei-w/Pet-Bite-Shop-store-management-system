@@ -1,147 +1,148 @@
 package entity;
 
 import java.time.LocalDate;
-import java.util.Objects;
+import java.time.Period;
 
+/**
+ * Nhân viên (có 3 chức vụ: Chủ cửa hàng, Thu ngân, Chăm sóc).
+ */
 public class NhanVien {
-	
-	private String maNhanVien;
-	private String ho;
-	private String ten;
-	private String gioiTinh;
-	private LocalDate ngaySinh;
-	private String soDienThoai;
-	private String diaChi;
-	private String chucVu;
-	private String trangThai;
-	
-	public NhanVien(String maNhanVien, String ho, String ten, String gioiTinh, LocalDate ngaySinh, String soDienThoai,
-			String diaChi, String chucVu, String trangThai) {
-		setMaNhanVien(maNhanVien);
-		setHo(ho);
-		setTen(ten);
-		setGioiTinh(gioiTinh);
-		setNgaySinh(ngaySinh);
-		setSoDienThoai(soDienThoai);
-		setDiaChi(diaChi);
-		setChucVu(chucVu);
-		setTrangThai(trangThai);
-	}
 
-	public NhanVien(String maNhanVien) {
-		setMaNhanVien(maNhanVien);
-	}
+    private String maNV;
+    private String hoTen;
+    private String soDienThoai;
+    private String gioiTinh;
+    private LocalDate ngaySinh;
+    private String diaChi;
+    private String vaiTro;
+    private boolean trangThai;    // true: Đang làm việc, false: Ngừng làm việc
 
-	public String getMaNhanVien() {
-		return maNhanVien;
-	}
+    public NhanVien() {
+        this.trangThai = true;    // mặc định: đang làm việc
+    }
 
-	public void setMaNhanVien(String maNhanVien) {
-		this.maNhanVien = maNhanVien;
-	}
+    public NhanVien(String maNV, String hoTen, String soDienThoai, String gioiTinh,
+                    LocalDate ngaySinh, String diaChi, String vaiTro, boolean trangThai) {
+        setMaNV(maNV);
+        setHoTen(hoTen);
+        setSoDienThoai(soDienThoai);
+        setGioiTinh(gioiTinh);
+        setNgaySinh(ngaySinh);
+        setDiaChi(diaChi);
+        setVaiTro(vaiTro);
+        setTrangThai(trangThai);
+    }
 
-	public String getHo() {
-		return ho;
-	}
+    public NhanVien(NhanVien nv) {
+        this.maNV = nv.maNV;
+        this.hoTen = nv.hoTen;
+        this.soDienThoai = nv.soDienThoai;
+        this.gioiTinh = nv.gioiTinh;
+        this.ngaySinh = nv.ngaySinh;
+        this.diaChi = nv.diaChi;
+        this.vaiTro = nv.vaiTro;
+        this.trangThai = nv.trangThai;
+    }
 
-	public void setHo(String ho) {
-		this.ho = ho;
-	}
+    public String getMaNV() {
+        return maNV;
+    }
 
-	public String getTen() {
-		return ten;
-	}
+    public void setMaNV(String maNV) {
+        if (maNV == null || !maNV.matches("NV\\d{9}")) {
+            throw new IllegalArgumentException("Mã nhân viên phải có dạng NVYYMMDDXXX (NV + 9 chữ số).");
+        }
+        this.maNV = maNV;
+    }
 
-	public void setTen(String ten) {
-		this.ten = ten;
-	}
+    public String getHoTen() {
+        return hoTen;
+    }
 
-	public String getGioiTinh() {
-		return gioiTinh;
-	}
+    public void setHoTen(String hoTen) {
+        if (hoTen == null || hoTen.trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ tên nhân viên không được để trống.");
+        }
+        this.hoTen = hoTen.trim();
+    }
 
-	public void setGioiTinh(String gioiTinh) {
-		this.gioiTinh = gioiTinh;
-	}
+    public String getSoDienThoai() {
+        return soDienThoai;
+    }
 
-	public LocalDate getNgaySinh() {
-		return ngaySinh;
-	}
+    public void setSoDienThoai(String soDienThoai) {
+        if (soDienThoai == null || !soDienThoai.matches("0[35789]\\d{8}")) {
+            throw new IllegalArgumentException("Số điện thoại gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
+        }
+        this.soDienThoai = soDienThoai;
+    }
 
-	public void setNgaySinh(LocalDate ngaySinh) {
-		if(du18Tuoi(ngaySinh)) {
-			this.ngaySinh = ngaySinh;
-		}else {
-			throw new IllegalArgumentException("Nhân viên phải đủ 18 tuổi");
-		}
-		
-	}
+    public String getGioiTinh() {
+        return gioiTinh;
+    }
 
-	public String getSoDienThoai() {
-		return soDienThoai;
-	}
+    public void setGioiTinh(String gioiTinh) {
+        if (gioiTinh == null || (!gioiTinh.equals("Nam") && !gioiTinh.equals("Nữ") && !gioiTinh.equals("Khác"))) {
+            throw new IllegalArgumentException("Giới tính chỉ nhận: Nam, Nữ hoặc Khác.");
+        }
+        this.gioiTinh = gioiTinh;
+    }
 
-	public void setSoDienThoai(String soDienThoai) {
-		this.soDienThoai = soDienThoai;
-	}
+    public LocalDate getNgaySinh() {
+        return ngaySinh;
+    }
 
-	public String getDiaChi() {
-		return diaChi;
-	}
+    public void setNgaySinh(LocalDate ngaySinh) {
+        if (ngaySinh == null || ngaySinh.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Ngày sinh không được để trống hoặc lớn hơn ngày hiện tại.");
+        }
+        if (Period.between(ngaySinh, LocalDate.now()).getYears() < 18) {
+            throw new IllegalArgumentException("Nhân viên phải đủ 18 tuổi trở lên.");
+        }
+        this.ngaySinh = ngaySinh;
+    }
 
-	public void setDiaChi(String diaChi) {
-		this.diaChi = diaChi;
-	}
+    public String getDiaChi() {
+        return diaChi;
+    }
 
-	public String getChucVu() {
-		return chucVu;
-	}
+    public void setDiaChi(String diaChi) {
+        if (diaChi == null || diaChi.trim().isEmpty()) {
+            throw new IllegalArgumentException("Địa chỉ nhân viên không được để trống.");
+        }
+        this.diaChi = diaChi.trim();
+    }
 
-	public void setChucVu(String chucVu) {
-		this.chucVu = chucVu;
-	}
+    public String getVaiTro() {
+        return vaiTro;
+    }
 
-	public String getTrangThai() {
-		return trangThai;
-	}
+    public void setVaiTro(String vaiTro) {
+        if (vaiTro == null || (!vaiTro.equals("Thu ngân") && !vaiTro.equals("Chăm sóc")
+                && !vaiTro.equals("Chủ cửa hàng"))) {
+            throw new IllegalArgumentException("Vai trò chỉ nhận: Thu ngân, Chăm sóc hoặc Chủ cửa hàng.");
+        }
+        this.vaiTro = vaiTro;
+    }
 
-	public void setTrangThai(String trangThai) {
-		this.trangThai = trangThai;
-	}
-	
-	public boolean du18Tuoi(LocalDate ngaySinh) {
-		int tuoi = LocalDate.now().getYear() - ngaySinh.getYear();
-		if(tuoi<18)
-			return false;
-		return true;
-	}
+    public boolean isTrangThai() {
+        return trangThai;
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(maNhanVien);
-	}
+    public void setTrangThai(boolean trangThai) {
+        this.trangThai = trangThai;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		NhanVien other = (NhanVien) obj;
-		return Objects.equals(maNhanVien, other.maNhanVien);
-	}
+    //Nghiệp vụ
+    /** Tính tuổi tính đến ngày hiện tại. */
+    public int tinhTuoi() {
+        return Period.between(ngaySinh, LocalDate.now()).getYears();
+    }
 
-	@Override
-	public String toString() {
-		return "NhanVien [maNhanVien=" + maNhanVien + ", ho=" + ho + ", ten=" + ten + ", gioiTinh=" + gioiTinh
-				+ ", ngaySinh=" + ngaySinh + ", soDienThoai=" + soDienThoai + ", diaChi=" + diaChi + ", chucVu="
-				+ chucVu + ", trangThai=" + trangThai + "]";
-	}
-	
-	
-	
-	
-
+    @Override
+    public String toString() {
+        return "NhanVien [maNV=" + maNV + ", hoTen=" + hoTen + ", soDienThoai=" + soDienThoai
+                + ", gioiTinh=" + gioiTinh + ", ngaySinh=" + ngaySinh + ", diaChi=" + diaChi
+                + ", vaiTro=" + vaiTro + ", trangThai=" + (trangThai ? "Đang làm việc" : "Ngừng làm việc") + "]";
+    }
 }
