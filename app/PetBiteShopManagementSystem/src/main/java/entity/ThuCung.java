@@ -1,7 +1,5 @@
 package entity;
 
-import java.time.LocalDate;
-
 public class ThuCung {
 	private String maThuCung;
 	private String tenThuCung;
@@ -57,7 +55,7 @@ public class ThuCung {
 	public double getCanNang() {
 		return canNang;
 	}
-	public void setCanNang(double canNang) {
+	public void setCanNang(double canNang) {	
 		this.canNang = canNang;
 	}
 	public String getTrangThai() {
