@@ -1,9 +1,6 @@
 ﻿/* ======================================================================
     TAO CO SO DU LIEU CHO SQL SERVER
-   ----------------------------------------------------------------------
-   - Dua tren: Dac ta co so du lieu (Chuong 4) + Class Diagram moi nhat.
-   - Cac cot khong ghi NOT NULL trong dac ta duoc de NULL; neu muon chat
-     hon thi sua lai.
+
    ====================================================================== */
 
 SET NOCOUNT ON;
@@ -384,81 +381,6 @@ CREATE INDEX IX_CTHDSP_maSP               ON ChiTietHoaDon_SanPham(maSP);       
 CREATE INDEX IX_PhieuTraHang_maHD         ON PhieuTraHang(maHD);
 CREATE INDEX IX_PhieuTraHang_hoanTat      ON PhieuTraHang(trangThai, thoiDiemHoanTat);
 CREATE INDEX IX_CTPTH_maHD_maSP           ON ChiTietPhieuTraHang(maHD, maSP);
-GO
-
-/* ======================================================================
-   PHAN 4 (TUY CHON): TRIGGER cho cac quy tac lien bang
-   Neu da kiem tra o tang ung dung thi co the bo qua phan nay.
-   ====================================================================== */
-
-/* 4.1  Phieu tra hang phai duoc lap trong vong 168 gio ke tu luc hoa don duoc thanh toan */
-CREATE TRIGGER trg_PhieuTraHang_KiemTraThoiHan
-ON PhieuTraHang
-AFTER INSERT
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        JOIN HoaDon h ON h.maHD = i.maHD
-        WHERE i.ngayLap < h.ngayLap
-           OR DATEDIFF(SECOND, h.ngayLap, i.ngayLap) > 168 * 3600
-    )
-    BEGIN
-        ROLLBACK TRANSACTION;
-        THROW 50001, N'Phiếu trả hàng phải được lập trong vòng 168 giờ kể từ thời điểm thanh toán hóa đơn.', 1;
-    END
-END
-GO
-
-/* 4.2  Tong so luong tra cua mot san pham khong vuot qua so luong da mua
-        (tinh cac phieu Cho xac nhan, Da duyet, Da hoan tat; phieu bi tu choi khong tinh) */
-CREATE TRIGGER trg_ChiTietPhieuTraHang_KiemTraSoLuong
-ON ChiTietPhieuTraHang
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM (SELECT DISTINCT maHD, maSP FROM inserted) k
-        JOIN ChiTietHoaDon_SanPham ct ON ct.maHD = k.maHD AND ct.maSP = k.maSP
-        CROSS APPLY (
-            SELECT ISNULL(SUM(c.soLuongTra), 0) AS daTra
-            FROM ChiTietPhieuTraHang c
-            JOIN PhieuTraHang p ON p.maPhieuTra = c.maPhieuTra
-            WHERE c.maHD = k.maHD
-              AND c.maSP = k.maSP
-              AND p.trangThai IN (N'Chờ xác nhận', N'Đã duyệt', N'Đã hoàn tất')
-        ) x
-        WHERE x.daTra > ct.soLuong
-    )
-    BEGIN
-        ROLLBACK TRANSACTION;
-        THROW 50002, N'Số lượng trả vượt quá số lượng đã mua còn được phép trả trên hóa đơn.', 1;
-    END
-END
-GO
-
-/* 4.3  Lich su cham soc chi ton tai cho lich hen o trang thai Hoan thanh */
-CREATE TRIGGER trg_LichSuChamSoc_ChiLichHoanThanh
-ON LichSuChamSoc
-AFTER INSERT, UPDATE
-AS
-BEGIN
-    SET NOCOUNT ON;
-    IF EXISTS (
-        SELECT 1
-        FROM inserted i
-        JOIN LichHen l ON l.maLichHen = i.maLichHen
-        WHERE l.trangThai <> N'Hoàn thành'
-    )
-    BEGIN
-        ROLLBACK TRANSACTION;
-        THROW 50003, N'Chỉ lịch hẹn ở trạng thái Hoàn thành mới có lịch sử chăm sóc.', 1;
-    END
-END
 GO
 
 /* ======================================================================

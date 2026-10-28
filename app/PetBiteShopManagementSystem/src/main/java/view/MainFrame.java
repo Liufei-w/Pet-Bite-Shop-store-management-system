@@ -37,7 +37,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ LỊCH HẸN"), "APPOINTMENTS");
         contentPanel.add(new PlaceholderPanel("LỊCH SỬ CHĂM SÓC"), "HISTORY");
         contentPanel.add(new PlaceholderPanel("BÁN HÀNG & THANH TOÁN"), "POS");
-        contentPanel.add(new PlaceholderPanel("TRA CỨU HÓA ĐƠN"), "INVOICES");
+        contentPanel.add(new InvoiceManagementPanel(), "INVOICES");
         contentPanel.add(new PlaceholderPanel("PHIẾU TRẢ HÀNG & HOÀN TIỀN"), "RETURNS");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ NHÂN VIÊN"), "EMPLOYEES");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ TÀI KHOẢN"), "ACCOUNTS");
