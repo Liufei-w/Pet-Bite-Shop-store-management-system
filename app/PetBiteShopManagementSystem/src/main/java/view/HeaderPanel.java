@@ -76,7 +76,16 @@ public class HeaderPanel extends JPanel {
         RoundPanel avatar = new RoundPanel(AppTheme.PRIMARY, 40);
         avatar.setLayout(new GridBagLayout());
         avatar.setPreferredSize(new Dimension(40, 40));
-        lblAvatar = new JLabel("P");
+        String initial = "P";
+        if (app.UserSession.getInstance().isLoggedIn()) {
+            String name = app.UserSession.getInstance().getTenNguoiDung();
+            if (name != null && !name.trim().isEmpty()) {
+                String[] parts = name.trim().split("\\s+");
+                initial = parts[parts.length - 1].substring(0, 1).toUpperCase();
+            }
+            avatar.setToolTipText(app.UserSession.getInstance().getTenNguoiDung() + " (" + app.UserSession.getInstance().getVaiTro() + ")");
+        }
+        lblAvatar = new JLabel(initial);
         lblAvatar.setFont(new Font("SansSerif", Font.BOLD, 14));
         lblAvatar.setForeground(AppTheme.SIDEBAR_BG);
         avatar.add(lblAvatar);
