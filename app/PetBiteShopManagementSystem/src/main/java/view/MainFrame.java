@@ -1,7 +1,11 @@
 package view;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+
 import app.NavigationController;
 
 public class MainFrame extends JFrame {
@@ -36,7 +40,7 @@ public class MainFrame extends JFrame {
         contentPanel.add(new ServiceManagementPanel(), "SERVICES");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ LỊCH HẸN"), "APPOINTMENTS");
         contentPanel.add(new PlaceholderPanel("LỊCH SỬ CHĂM SÓC"), "HISTORY");
-        contentPanel.add(new PlaceholderPanel("BÁN HÀNG & THANH TOÁN"), "POS");
+        contentPanel.add(new BanHangPanel(), "BANHANG");
         contentPanel.add(new InvoiceManagementPanel(), "INVOICES");
         contentPanel.add(new PlaceholderPanel("PHIẾU TRẢ HÀNG & HOÀN TIỀN"), "RETURNS");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ NHÂN VIÊN"), "EMPLOYEES");
@@ -60,6 +64,6 @@ public class MainFrame extends JFrame {
         add(rightPanel, BorderLayout.CENTER);
 
         // Mặc định hiển thị Quản lý dịch vụ giống hình tham chiếu
-        navController.switchScreen("SERVICES");
+        navController.switchScreen("DASHBOARD");
     }
 }

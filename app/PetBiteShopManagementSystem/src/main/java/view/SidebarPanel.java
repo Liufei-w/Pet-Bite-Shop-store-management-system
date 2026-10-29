@@ -76,7 +76,7 @@ public class SidebarPanel extends JPanel {
         addMenuItem(menuListPanel, "SERVICES", "Dịch vụ");
         addMenuItem(menuListPanel, "APPOINTMENTS", "Lịch hẹn");
         addMenuItem(menuListPanel, "HISTORY", "Lịch sử chăm sóc");
-        addMenuItem(menuListPanel, "POS", "Bán hàng");
+        addMenuItem(menuListPanel, "BANHANG", "Bán hàng");
         addMenuItem(menuListPanel, "INVOICES", "Hóa đơn");
         addMenuItem(menuListPanel, "RETURNS", "Phiếu trả hàng");
         addMenuItem(menuListPanel, "EMPLOYEES", "Nhân viên");

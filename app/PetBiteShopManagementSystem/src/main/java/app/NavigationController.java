@@ -32,7 +32,7 @@ public class NavigationController {
         screenTitles.put("SERVICES", "Quản lý dịch vụ");
         screenTitles.put("APPOINTMENTS", "Quản lý lịch hẹn chăm sóc");
         screenTitles.put("HISTORY", "Tra cứu lịch sử chăm sóc");
-        screenTitles.put("POS", "Bán hàng trực tiếp");
+        screenTitles.put("BANHANG", "Bán hàng / Chọn khách hàng, tự động thêm dịch vụ và thanh toán");
         screenTitles.put("INVOICES", "Tra cứu hóa đơn");
         screenTitles.put("RETURNS", "Quản lý phiếu trả hàng");
         screenTitles.put("EMPLOYEES", "Quản lý nhân viên");
