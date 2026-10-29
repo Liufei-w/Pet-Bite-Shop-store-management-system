@@ -117,10 +117,15 @@ public class SidebarPanel extends JPanel {
         });
         logoutItem.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                int confirm = JOptionPane.showConfirmDialog(null,
-                        "Bạn có chắc chắn muốn đăng xuất?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(SidebarPanel.this,
+                        "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?", "Xác nhận đăng xuất", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
-                    System.exit(0);
+                    Window window = SwingUtilities.getWindowAncestor(SidebarPanel.this);
+                    if (window != null) {
+                        window.dispose();
+                    }
+                    app.UserSession.getInstance().clear();
+                    new LoginFrame().setVisible(true);
                 }
             }
         });
