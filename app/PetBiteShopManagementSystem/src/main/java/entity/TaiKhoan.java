@@ -7,8 +7,6 @@ public class TaiKhoan {
 	private String matKhau;
 	private boolean trangThai;
 	private String maTaiKhoan;
-	private NhanVien nhanVien;
-
 	public TaiKhoan(String tenDangNhap, String matKhau, boolean trangThai, String maTaiKhoan) {
 		super();
 		setMaTaiKhoan(maTaiKhoan);
@@ -16,20 +14,9 @@ public class TaiKhoan {
 		setMatKhau(matKhau);
 		setTrangThai(trangThai);
 	}
-	public TaiKhoan(String tenDangNhap, String matKhau, boolean trangThai, String maTaiKhoan, NhanVien nhanVien) {
-		super();
-		setMaTaiKhoan(maTaiKhoan);
-		setTenDangNhap(tenDangNhap);
-		setMatKhau(matKhau);
-		setTrangThai(trangThai);
-		setNhanVien(nhanVien);
-	}
 	public TaiKhoan(String maTaiKhoan) {
 		super();
 		this.maTaiKhoan = maTaiKhoan;
-	}
-	public TaiKhoan() {
-		super();
 	}
 	public String getTenDangNhap() {
 		return tenDangNhap;
@@ -55,18 +42,6 @@ public class TaiKhoan {
 	public void setMaTaiKhoan(String maTaiKhoan) {
 		this.maTaiKhoan = maTaiKhoan;
 	}
-	public String getMaTK() {
-		return maTaiKhoan;
-	}
-	public void setMaTK(String maTK) {
-		this.maTaiKhoan = maTK;
-	}
-	public NhanVien getNhanVien() {
-		return nhanVien;
-	}
-	public void setNhanVien(NhanVien nhanVien) {
-		this.nhanVien = nhanVien;
-	}
 	@Override
 	public int hashCode() {
 		return Objects.hash(maTaiKhoan, tenDangNhap);
@@ -85,7 +60,7 @@ public class TaiKhoan {
 	@Override
 	public String toString() {
 		return "TaiKhoan [tenDangNhap=" + tenDangNhap + ", matKhau=" + matKhau + ", trangThai=" + trangThai
-				+ ", maTaiKhoan=" + maTaiKhoan + ", nhanVien=" + (nhanVien != null ? nhanVien.getHoTen() : "null") + "]";
+				+ ", maTaiKhoan=" + maTaiKhoan + "]";
 	}
 	
 	

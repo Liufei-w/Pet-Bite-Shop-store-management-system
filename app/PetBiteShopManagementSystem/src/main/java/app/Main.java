@@ -11,8 +11,8 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            view.LoginFrame loginFrame = new view.LoginFrame();
-            loginFrame.setVisible(true);
+            MainFrame frame = new MainFrame();
+            frame.setVisible(true);
         });
     }
 }
