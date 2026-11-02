@@ -1,4 +1,3 @@
-
 package view;
 
 import javax.swing.table.TableRowSorter;
@@ -21,12 +20,11 @@ public class CareHistoryManagementPanel extends JPanel {
     private JComboBox<String> hopChonDichVu;
 
     private final Color mauNenChinh = AppTheme.MAIN_BG;
-    private final Color mauTheTrang = Color.WHITE;
-    private final Color mauChuTieuDe = AppTheme.TEXT_PRIMARY;
+    private final Color mauTheTrang = AppTheme.CARD_BG;
+    private final Color mauChuTieuDe = new Color(0x12, 0x39, 0x58);
     private final Color mauChuPhu = AppTheme.TEXT_SECONDARY;
     private final Color mauVienNhe = AppTheme.BORDER;
     private final Color mauNenOData = new Color(248, 251, 253);
-    private final Color mauChuBoLoc = new Color(110, 130, 150);
     private final Color mauHongNutChinh = new Color(217, 130, 139);
     private final Color mauNenTieuDeCot = new Color(247, 250, 253);
     private final Color mauTieuDeCot = new Color(76, 100, 116);
@@ -121,9 +119,10 @@ public class CareHistoryManagementPanel extends JPanel {
             "Cắt tỉa lông",
             "Khám sức khỏe",
             "Tiêm phòng"
-        P};
+        };
 
-P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
+        hopChonDichVu = new JComboBox<>(danhSachDichVu);
+        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
         hopChonDichVu.setFont(AppTheme.FONT_PLAIN);
         hopChonDichVu.setForeground(new Color(45, 62, 80));
         hopChonDichVu.setBackground(mauNenOData);
@@ -236,11 +235,8 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
 
     // ===== CÁC SỰ KIỆN =====
     private void khoiTaoSuKien() {
-
         nutTimKiem.addActionListener(e -> thucHienTimKiem());
-
         oNhapTimKiem.addActionListener(e -> thucHienTimKiem());
-
         hopChonDichVu.addActionListener(e -> thucHienTimKiem());
 
         nutLamMoi.addActionListener(e -> {
@@ -269,34 +265,28 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
         String tuKhoa = oNhapTimKiem.getText().trim().toLowerCase();
         String dichVu = hopChonDichVu.getSelectedItem().toString();
 
-        TableRowSorter<DefaultTableModel> boLoc =
-            new TableRowSorter<>(moHinhBang);
-
+        TableRowSorter<DefaultTableModel> boLoc = new TableRowSorter<>(moHinhBang);
         bangLichSu.setRowSorter(boLoc);
 
-        RowFilter<DefaultTableModel, Integer> dieuKien =
-            new RowFilter<DefaultTableModel, Integer>() {
-                @Override
-                public boolean include(
-                    Entry<? extends DefaultTableModel,
-                    ? extends Integer> entry
-                ) {
-                    String maLS = entry.getStringValue(0).toLowerCase();
-                    String thuCung = entry.getStringValue(2).toLowerCase();
-                    String khachHang = entry.getStringValue(3).toLowerCase();
-                    String tenDichVu = entry.getStringValue(4);
+        RowFilter<DefaultTableModel, Integer> dieuKien = new RowFilter<DefaultTableModel, Integer>() {
+            @Override
+            public boolean include(Entry<? extends DefaultTableModel, ? extends Integer> entry) {
+                String maLS = entry.getStringValue(0).toLowerCase();
+                String thuCung = entry.getStringValue(2).toLowerCase();
+                String khachHang = entry.getStringValue(3).toLowerCase();
+                String tenDichVu = entry.getStringValue(4);
 
-                    boolean khopTuKhoa = tuKhoa.isEmpty()
-                        || maLS.contains(tuKhoa)
-                        || thuCung.contains(tuKhoa)
-                        || khachHang.contains(tuKhoa);
+                boolean khopTuKhoa = tuKhoa.isEmpty()
+                    || maLS.contains(tuKhoa)
+                    || thuCung.contains(tuKhoa)
+                    || khachHang.contains(tuKhoa);
 
-                    boolean khopDichVu = dichVu.equals("Tất cả dịch vụ")
-                        || tenDichVu.equalsIgnoreCase(dichVu);
+                boolean khopDichVu = dichVu.equals("Tất cả dịch vụ")
+                    || tenDichVu.equalsIgnoreCase(dichVu);
 
-                    return khopTuKhoa && khopDichVu;
-                }
-            };
+                return khopTuKhoa && khopDichVu;
+            }
+        };
 
         boLoc.setRowFilter(dieuKien);
     }
@@ -304,11 +294,9 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
     // ===== KHÔI PHỤC DANH SÁCH =====
     private void khoiPhucDanhSach() {
         moHinhBang.setRowCount(0);
-
         for (Object[] dong : duLieuBanDau) {
             moHinhBang.addRow(dong.clone());
         }
-
         bangLichSu.setRowSorter(null);
     }
 
@@ -326,7 +314,6 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
 
         if (luaChon == JOptionPane.YES_OPTION) {
             moHinhBang.removeRow(dong);
-
             JOptionPane.showMessageDialog(
                 this,
                 "Đã xóa lịch sử chăm sóc " + maLS + ".",
@@ -337,9 +324,7 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
     }
 
     // ===== RENDER TRẠNG THÁI =====
-    private class BoKetXuatTrangThaiLichSu
-        extends DefaultTableCellRenderer {
-
+    private class BoKetXuatTrangThaiLichSu extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(
             JTable table, Object value, boolean isSelected,
@@ -348,37 +333,24 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
             String giaTri = value != null ? value.toString() : "";
             boolean laHoanThanh = giaTri.equalsIgnoreCase("Hoàn thành");
 
-            JPanel khungBadge = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 0, 10)
-            );
+            JPanel khungBadge = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
             khungBadge.setOpaque(true);
-            khungBadge.setBackground(
-                isSelected ? table.getSelectionBackground() : Color.WHITE
-            );
+            khungBadge.setBackground(isSelected ? table.getSelectionBackground() : Color.WHITE);
 
             JLabel nhanBadge = new JLabel(giaTri, SwingConstants.CENTER) {
                 @Override
                 protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setRenderingHint(
-                        RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON
-                    );
-                    g2.setColor(laHoanThanh
-                        ? mauNenXanhTrangThai
-                        : new Color(255, 244, 223));
-                    g2.fillRoundRect(
-                        0, 0, getWidth(), getHeight(), 16, 16
-                    );
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(laHoanThanh ? mauNenXanhTrangThai : new Color(255, 244, 223));
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
                     g2.dispose();
                     super.paintComponent(g);
                 }
             };
 
             nhanBadge.setFont(new Font("Segoe UI", Font.BOLD, 12));
-            nhanBadge.setForeground(laHoanThanh
-                ? mauXanhTrangThai
-                : new Color(167, 100, 0));
+            nhanBadge.setForeground(laHoanThanh ? mauXanhTrangThai : new Color(167, 100, 0));
             nhanBadge.setPreferredSize(new Dimension(115, 28));
             nhanBadge.setOpaque(false);
 
@@ -388,34 +360,23 @@ P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
     }
 
     // ===== RENDER NÚT XÓA =====
-    private class BoKetXuatThaoTacXoa
-        extends DefaultTableCellRenderer {
-
+    private class BoKetXuatThaoTacXoa extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(
             JTable table, Object value, boolean isSelected,
             boolean hasFocus, int row, int column
         ) {
-            JPanel khungThaoTac = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 0, 10)
-            );
+            JPanel khungThaoTac = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
             khungThaoTac.setOpaque(true);
-            khungThaoTac.setBackground(
-                isSelected ? table.getSelectionBackground() : Color.WHITE
-            );
+            khungThaoTac.setBackground(isSelected ? table.getSelectionBackground() : Color.WHITE);
 
             JLabel nhanNutXoa = new JLabel("Xóa", SwingConstants.CENTER) {
                 @Override
                 protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g.create();
-                    g2.setRenderingHint(
-                        RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON
-                    );
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(mauNenNutXoa);
-                    g2.fillRoundRect(
-                        0, 0, getWidth(), getHeight(), 6, 6
-                    );
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 6, 6);
                     g2.dispose();
                     super.paintComponent(g);
                 }
