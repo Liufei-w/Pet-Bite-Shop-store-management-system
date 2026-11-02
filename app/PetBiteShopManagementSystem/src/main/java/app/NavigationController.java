@@ -13,6 +13,7 @@ public class NavigationController {
     private SidebarPanel sidebarPanel;
     private HeaderPanel headerPanel;
     private Map<String, String> screenTitles;
+    private Map<String, String> screenSubtitles;
 
     public NavigationController(CardLayout cardLayout, JPanel contentPanel, SidebarPanel sidebarPanel, HeaderPanel headerPanel) {
         this.cardLayout = cardLayout;
@@ -22,6 +23,7 @@ public class NavigationController {
 
         // BẮT BUỘC PHẢI KHỞI TẠO HASHMAP TRƯỚC KHI DÙNG .put()
         this.screenTitles = new HashMap<>();
+        this.screenSubtitles = new HashMap<>();
 
         // Đăng ký tiêu đề cho từng màn hình
         screenTitles.put("DASHBOARD", "Trang chủ / Dashboard");
@@ -41,13 +43,16 @@ public class NavigationController {
         screenTitles.put("STAT_PRODUCTS", "Thống kê & báo cáo > Thống kê số lượng sản phẩm");
         screenTitles.put("STAT_SERVICES", "Thống kê & báo cáo > Thống kê lượt sử dụng dịch vụ");
         screenTitles.put("STAT_INVENTORY", "Thống kê & báo cáo > Báo cáo tồn kho");
+        screenSubtitles.put("EMPLOYEES", "Thêm, cập nhật, tra cứu và quản lý trạng thái làm việc của nhân viên");
     }
 
     public void switchScreen(String screenCode) {
         cardLayout.show(contentPanel, screenCode);
         sidebarPanel.setActiveMenu(screenCode);
         if (screenTitles.containsKey(screenCode)) {
-            headerPanel.setBreadcrumb(screenTitles.get(screenCode));
+            String title = screenTitles.get(screenCode);
+            String subtitle = screenSubtitles.getOrDefault(screenCode, "");
+            headerPanel.setHeader(title, subtitle);
         }
     }
 }

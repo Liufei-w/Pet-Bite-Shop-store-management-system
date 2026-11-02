@@ -1,4 +1,4 @@
-﻿/* ======================================================================
+/* ======================================================================
     PET BITE - DU LIEU MAU (SEED) CHO TOAN BO CHUC NANG
     (Da sua loi CK_HoaDon_thanhToan va khop chuan VAT 10%)
    ====================================================================== */
@@ -66,16 +66,16 @@ INSERT INTO DichVu (maDV, tenDV, giaDichVu, thoiGianThucHien, moTa, trangThai) V
     (N'DV251001007', N'Chải lông gỡ rối', 80000, 30, N'Chải và gỡ rối lông dài', 1),
     (N'DV251001008', N'Nhuộm lông nghệ thuật', 300000, 120, NULL, 1);
 
+-- NV1 = Chu cua hang; NV2, NV3 = Thu ngan; NV4, NV5 = Cham soc; NV6 = Thu ngan da nghi viec
 INSERT INTO NhanVien (maNV, hoTen, soDienThoai, gioiTinh, ngaySinh, diaChi, vaiTro, trangThai) VALUES
     (N'NV251001001', N'Nguyễn Văn Hùng', N'0901000001', N'Nam', N'1985-04-12', N'25 Trần Hưng Đạo, Quận 1, TP.HCM', N'Chủ cửa hàng', 1),
     (N'NV251001002', N'Trần Thị Mai', N'0901000002', N'Nữ', N'1998-08-21', N'14 Lê Văn Sỹ, Quận 3, TP.HCM', N'Thu ngân', 1),
     (N'NV251001003', N'Lê Hoàng Nam', N'0901000003', N'Nam', N'1999-02-14', N'60 Nguyễn Thị Minh Khai, Quận 1, TP.HCM', N'Thu ngân', 1),
     (N'NV251001004', N'Phạm Thu Hà', N'0901000004', N'Nữ', N'1997-11-30', N'8 Hai Bà Trưng, Quận 1, TP.HCM', N'Chăm sóc', 1),
     (N'NV251001005', N'Võ Minh Tuấn', N'0901000005', N'Nam', N'1996-06-05', N'102 Pasteur, Quận 3, TP.HCM', N'Chăm sóc', 1),
-    (N'NV251001006', N'Đặng Quốc Bảo', N'0901000006', N'Nam', N'1995-01-18', N'3 Nam Kỳ Khởi Nghĩa, Quận 3, TP.HCM', N'Thu ngân', 0),
-    (N'NV251001007', N'Hồ Thanh Phong', N'0901000007', N'Nam', N'2001-03-09', N'47 Võ Thị Sáu, Quận 3, TP.HCM', N'Chăm sóc', 1),
-    (N'NV251001008', N'Ngô Bảo Châu', N'0901000008', N'Nữ', N'2002-12-25', N'19 Trương Định, Quận 3, TP.HCM', N'Thu ngân', 1);
+    (N'NV251001006', N'Đặng Quốc Bảo', N'0901000006', N'Nam', N'1995-01-18', N'3 Nam Kỳ Khởi Nghĩa, Quận 3, TP.HCM', N'Thu ngân', 0);
 
+-- Mat khau chung PetBite@123 (SHA-256). Tai khoan cua NV6 dang bi khoa
 INSERT INTO TaiKhoan (maTK, tenDangNhap, matKhau, trangThai, maNV) VALUES
     (N'TK251001001', N'chu', N'f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc', 1, N'NV251001001'),
     (N'TK251001002', N'thungan1', N'f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc', 1, N'NV251001002'),
@@ -84,12 +84,9 @@ INSERT INTO TaiKhoan (maTK, tenDangNhap, matKhau, trangThai, maNV) VALUES
     (N'TK251001005', N'chamsoc2', N'f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc', 1, N'NV251001005'),
     (N'TK251001006', N'thungan3', N'f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc', 0, N'NV251001006');
 
-<<<<<<< HEAD
-=======
 -- SP12 het hang (ton = 0); SP13 ngung kinh doanh; SP14, SP15, SP17, SP18 ton thap.
 -- Gia ban = giaNhap + tienLoi (cot tinh). tienLoi = 0 de gia ban trung dung so da dung trong du lieu mau cu.
 -- Day la cach tach ky thuat, khong phai gia von lich su da kiem chung.
->>>>>>> 475c3da537f1f1b132a3f8645806344193bfd48e
 INSERT INTO SanPham (maSP, tenSP, donViTinh, giaNhap, tienLoi, soLuongTon, trangThai, maLoaiSP) VALUES
     (N'SP251001001', N'Hạt Royal Canin cho chó 2kg', N'Túi', 385000, 0, 40, 1, N'LSP251001001'),
     (N'SP251001002', N'Pate Whiskas cho mèo', N'Lon', 28000, 0, 120, 1, N'LSP251001001'),

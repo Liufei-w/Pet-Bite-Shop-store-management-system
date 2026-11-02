@@ -9,6 +9,15 @@ public class TaiKhoan {
 	private String maTaiKhoan;
 	private NhanVien nhanVien;
 
+	public TaiKhoan() {
+		super();
+	}
+
+	public TaiKhoan(String maTaiKhoan) {
+		super();
+		this.maTaiKhoan = maTaiKhoan;
+	}
+
 	public TaiKhoan(String tenDangNhap, String matKhau, boolean trangThai, String maTaiKhoan) {
 		super();
 		setMaTaiKhoan(maTaiKhoan);
@@ -16,6 +25,7 @@ public class TaiKhoan {
 		setMatKhau(matKhau);
 		setTrangThai(trangThai);
 	}
+
 	public TaiKhoan(String tenDangNhap, String matKhau, boolean trangThai, String maTaiKhoan, NhanVien nhanVien) {
 		super();
 		setMaTaiKhoan(maTaiKhoan);
@@ -24,53 +34,60 @@ public class TaiKhoan {
 		setTrangThai(trangThai);
 		setNhanVien(nhanVien);
 	}
-	public TaiKhoan(String maTaiKhoan) {
-		super();
-		this.maTaiKhoan = maTaiKhoan;
-	}
-	public TaiKhoan() {
-		super();
-	}
+
 	public String getTenDangNhap() {
 		return tenDangNhap;
 	}
+
 	public void setTenDangNhap(String tenDangNhap) {
 		this.tenDangNhap = tenDangNhap;
 	}
+
 	public String getMatKhau() {
 		return matKhau;
 	}
+
 	public void setMatKhau(String matKhau) {
 		this.matKhau = matKhau;
 	}
+
 	public boolean isTrangThai() {
 		return trangThai;
 	}
+
 	public void setTrangThai(boolean trangThai) {
 		this.trangThai = trangThai;
 	}
+
 	public String getMaTaiKhoan() {
 		return maTaiKhoan;
 	}
+
 	public void setMaTaiKhoan(String maTaiKhoan) {
 		this.maTaiKhoan = maTaiKhoan;
 	}
+
 	public String getMaTK() {
 		return maTaiKhoan;
 	}
+
 	public void setMaTK(String maTK) {
 		this.maTaiKhoan = maTK;
 	}
+
 	public NhanVien getNhanVien() {
 		return nhanVien;
 	}
+
 	public void setNhanVien(NhanVien nhanVien) {
 		this.nhanVien = nhanVien;
 	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(maTaiKhoan, tenDangNhap);
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -82,12 +99,10 @@ public class TaiKhoan {
 		TaiKhoan other = (TaiKhoan) obj;
 		return Objects.equals(maTaiKhoan, other.maTaiKhoan) && Objects.equals(tenDangNhap, other.tenDangNhap);
 	}
+
 	@Override
 	public String toString() {
 		return "TaiKhoan [tenDangNhap=" + tenDangNhap + ", matKhau=" + matKhau + ", trangThai=" + trangThai
 				+ ", maTaiKhoan=" + maTaiKhoan + ", nhanVien=" + (nhanVien != null ? nhanVien.getHoTen() : "null") + "]";
 	}
-	
-	
-
 }
