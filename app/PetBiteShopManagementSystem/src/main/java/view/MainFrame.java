@@ -17,7 +17,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         setTitle("PET BITE SHOP - Quản lý cửa hàng thú cưng");
-        setSize(1250, 790);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
