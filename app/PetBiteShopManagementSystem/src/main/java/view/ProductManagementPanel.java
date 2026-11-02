@@ -1,10 +1,8 @@
 package view;
 
 import app.UserSession;
-import service.LoaiSanPham_Service;
-import service.SanPham_Service;
-import service.impl.LoaiSanPham_ServiceImpl;
-import service.impl.SanPham_ServiceImpl;
+import dao.LoaiSanPham_DAO;
+import dao.SanPham_DAO;
 import entity.LoaiSanPham;
 import entity.SanPham;
 import java.awt.BorderLayout;
@@ -104,8 +102,8 @@ public class ProductManagementPanel extends JPanel {
     private JPanel khungPhanTrang;
     private JLabel nhanThongKePhanTrang;
     private JPanel khungCacNutChuyenTrang;
-    private final SanPham_Service sanPhamService = new SanPham_ServiceImpl();
-    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final SanPham_DAO sanPhamDAO = new SanPham_DAO();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
     private final DecimalFormat dinhDangGia = taoDinhDangGia();
     private final ArrayList<SanPham> danhSachLoc = new ArrayList<>();
     private final ArrayList<SanPham> danhSachTrang = new ArrayList<>();
@@ -437,7 +435,7 @@ public class ProductManagementPanel extends JPanel {
         String maDangChon = hopChonLoai.getSelectedItem() instanceof LoaiSanPham loai ? loai.getMaLoaiSanPham() : null;
         hopChonLoai.removeAllItems();
         hopChonLoai.addItem(null);
-        ArrayList<LoaiSanPham> danhSach = loaiSanPhamService.getAllLoaiSanPham();
+        ArrayList<LoaiSanPham> danhSach = loaiSanPhamDAO.getAllLoaiSanPham();
         if (danhSach != null) {
             for (LoaiSanPham loai : danhSach) {
                 hopChonLoai.addItem(loai);
@@ -469,7 +467,7 @@ public class ProductManagementPanel extends JPanel {
             trangThai = Boolean.FALSE;
         }
         String maLoai = hopChonLoai.getSelectedItem() instanceof LoaiSanPham loai ? loai.getMaLoaiSanPham() : null;
-        ArrayList<SanPham> ketQua = sanPhamService.locDanhSachQuanLy(
+        ArrayList<SanPham> ketQua = sanPhamDAO.locDanhSachQuanLy(
                 oNhapTimKiem.getText(), maLoai, trangThai, kieuSapXepDangChon());
         danhSachLoc.clear();
         if (ketQua == null) {
