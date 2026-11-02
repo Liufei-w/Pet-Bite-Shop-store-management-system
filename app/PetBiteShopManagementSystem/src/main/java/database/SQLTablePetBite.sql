@@ -246,15 +246,8 @@ CREATE TABLE HoaDon (
     CONSTRAINT CK_HoaDon_tongTienHang CHECK (tongTienHang > 0),
     CONSTRAINT CK_HoaDon_thueSuat CHECK (thueSuat >= 0),
     CONSTRAINT CK_HoaDon_tienKhachDua CHECK (tienKhachDua IS NULL OR tienKhachDua >= 0),
-    CONSTRAINT CK_HoaDon_tienThua CHECK (tienThua IS NULL OR tienThua >= 0),
-    CONSTRAINT CK_HoaDon_thanhToan CHECK (
-        (phuongThucTT = N'Tiền mặt'
-            AND tienKhachDua IS NOT NULL AND tienKhachDua >= tongTien
-            AND tienThua IS NOT NULL AND tienThua = tienKhachDua - tongTien)
-        OR
-        (phuongThucTT = N'Chuyển khoản'
-            AND tienKhachDua IS NULL AND (tienThua IS NULL OR tienThua = 0))
-    )
+    CONSTRAINT CK_HoaDon_tienThua CHECK (tienThua IS NULL OR tienThua >= 0)
+    
 );
 GO
 
