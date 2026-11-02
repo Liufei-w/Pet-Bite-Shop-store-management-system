@@ -30,12 +30,12 @@ public class MainFrame extends JFrame {
         // Đăng ký các màn hình vào CardLayout
         contentPanel.add(new DashboardPanel(), "DASHBOARD");
         contentPanel.add(new CustomerManagementPanel(), "CUSTOMERS");
-        contentPanel.add(new PlaceholderPanel("QUẢN LÝ THÚ CƯNG"), "PETS");
+        contentPanel.add(new PetManagementPanel(), "PETS");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ LOẠI SẢN PHẨM"), "PRODUCT_TYPES");
         contentPanel.add(new PlaceholderPanel("QUẢN LÝ SẢN PHẨM"), "PRODUCTS");
         contentPanel.add(new ServiceManagementPanel(), "SERVICES");
-        contentPanel.add(new PlaceholderPanel("QUẢN LÝ LỊCH HẸN"), "APPOINTMENTS");
-        contentPanel.add(new PlaceholderPanel("LỊCH SỬ CHĂM SÓC"), "HISTORY");
+        contentPanel.add(new AppointmentManagementPanel(), "APPOINTMENTS");
+        contentPanel.add(new CareHistoryManagementPanel(), "HISTORY");
         contentPanel.add(new PlaceholderPanel("BÁN HÀNG & THANH TOÁN"), "POS");
         contentPanel.add(new PlaceholderPanel("TRA CỨU HÓA ĐƠN"), "INVOICES");
         contentPanel.add(new PlaceholderPanel("PHIẾU TRẢ HÀNG & HOÀN TIỀN"), "RETURNS");

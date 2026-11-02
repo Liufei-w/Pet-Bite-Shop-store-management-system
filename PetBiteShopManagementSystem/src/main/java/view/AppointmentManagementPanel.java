@@ -2,7 +2,6 @@
 package view;
 
 import entity.LichHen;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.time.LocalDateTime;

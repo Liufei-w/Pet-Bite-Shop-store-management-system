@@ -121,10 +121,9 @@ public class CareHistoryManagementPanel extends JPanel {
             "Cắt tỉa lông",
             "Khám sức khỏe",
             "Tiêm phòng"
-        };
+        P};
 
-        hopChonDichVu = new JComboBox<>(danhSachDichVu);
-        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
+P        hopChonDichVu.setPreferredSize(new Dimension(140, 38));
         hopChonDichVu.setFont(AppTheme.FONT_PLAIN);
         hopChonDichVu.setForeground(new Color(45, 62, 80));
         hopChonDichVu.setBackground(mauNenOData);

@@ -229,7 +229,7 @@ public class CustomerManagementPanel extends JPanel {
                     
                     if (cotChon == 6) {
                         JOptionPane.showMessageDialog(CustomerManagementPanel.this, 
-                            "Thực hiện chỉnh sửa thông tin cho khách hàng: " + tenKH + " (" + maKH + ")", 
+                            "Thực hiện sửa thông tin cho khách hàng: " + tenKH + " (" + maKH + ")", 
                             "Thao tác", JOptionPane.INFORMATION_MESSAGE);
                     }
                 }

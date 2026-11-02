@@ -225,7 +225,7 @@ public class PetManagementPanel extends JPanel {
                     String tenTC = bangThuCung.getValueAt(hangChon, 1).toString();
                     
                     int xacNhan = JOptionPane.showConfirmDialog(PetManagementPanel.this, 
-                        "Bạn có chắc chắn muốn xóa thú cưng: " + tenTC + " (" + maTC + ") không?", 
+                        "Bạn có chắc muốn xóa thú cưng: " + tenTC + " (" + maTC + ") không?", 
                         "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
                     if (xacNhan == JOptionPane.YES_OPTION) {
                         xoaThuCungKhoiDanhSachGoc(maTC);
