@@ -2,7 +2,8 @@ package view;
 
 import connectDB.ConnectDB;
 import dao.KhachHang_DAO;
-import dao.SanPham_DAO;
+import service.SanPham_Service;
+import service.impl.SanPham_ServiceImpl;
 import dao.HoaDon_DAO;
 import entity.KhachHang;
 import entity.SanPham;
@@ -39,7 +40,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
     private JPanel panelTienMatInput;
 
     private KhachHang_DAO kh_dao;
-    private SanPham_DAO sp_dao;
+    private SanPham_Service spService;
     private HoaDon_DAO hd_dao;
     private KhachHang khachHangHienTai = null;
 
@@ -51,7 +52,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
         }
 
         kh_dao = new KhachHang_DAO();
-        sp_dao = new SanPham_DAO();
+        spService = new SanPham_ServiceImpl();
         hd_dao = new HoaDon_DAO();
 
         setLayout(new BorderLayout(15, 15));
@@ -439,7 +440,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
             return;
         }
 
-        ArrayList<SanPham> dsSP = sp_dao.timSanPhamTheoMaHoacTen(keyword);
+        ArrayList<SanPham> dsSP = spService.timSanPhamTheoMaHoacTen(keyword);
         
         if (dsSP.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Không tìm thấy sản phẩm nào phù hợp với từ khóa: " + keyword);
@@ -509,7 +510,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
     }
 
     private void hienThiBangChonTatCaSanPham() {
-        ArrayList<SanPham> dsSP = sp_dao.getAllSanPham();
+        ArrayList<SanPham> dsSP = spService.getAllSanPham();
         if (dsSP.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Không có sản phẩm nào trong kho!");
             return;
@@ -643,7 +644,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
             if (row >= 0) {
                 String maVaTen = modelHoaDonTam.getValueAt(row, 1).toString();
                 String maSP = maVaTen.split(" • ")[0];
-                SanPham sp = sp_dao.getSanPhamTheoMa(maSP);
+                SanPham sp = spService.getSanPhamTheoMa(maSP);
                 int slCu = Integer.parseInt(modelHoaDonTam.getValueAt(row, 2).toString());
                 
                 if (sp != null && slCu + 1 > sp.getSoLuongTon()) {

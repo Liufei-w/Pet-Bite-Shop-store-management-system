@@ -1,6 +1,13 @@
 package view;
 
+import entity.LoaiSanPham;
+import service.LoaiSanPham_Service;
+import service.SanPham_Service;
+import service.impl.LoaiSanPham_ServiceImpl;
+import service.impl.SanPham_ServiceImpl;
+import entity.SanPham;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Frame;
@@ -15,17 +22,25 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.math.BigDecimal;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Locale;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.border.EmptyBorder;
 
 /**
@@ -72,9 +87,13 @@ public class UpdateProductDialog extends JDialog {
     private JTextField oNhapTenSanPham;
 
     private JLabel nhanLoaiSanPham;
-    private JComboBox<String> hopChonLoaiSanPham;
+    private JComboBox<LoaiSanPham> hopChonLoaiSanPham;
     private JLabel nhanDonViTinh;
     private JTextField oNhapDonViTinh;
+    private JLabel nhanGiaNhap;
+    private JTextField oNhapGiaNhap;
+    private JLabel nhanTienLoi;
+    private JTextField oNhapTienLoi;
     private JLabel nhanGiaBan;
     private JTextField oNhapGiaBan;
 
@@ -83,18 +102,32 @@ public class UpdateProductDialog extends JDialog {
     private JLabel nhanTrangThai;
     private JComboBox<String> hopChonTrangThai;
 
-    private JLabel nhanMoTa;
-    private JTextArea vungNhapMoTa;
-    private JScrollPane thanhCuonMoTa;
     private JLabel nhanKhungCanhBao;
     private JButton nutHuyBo;
     private JButton nutLuuCapNhat;
+    private SanPham sanPhamDangSua;
+    private Runnable sauKhiLuu;
+    private final SanPham_Service sanPhamService = new SanPham_ServiceImpl();
+    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final DecimalFormat dinhDangGia = taoDinhDangGia();
 
     private Point diemBamChuot;
 
     public UpdateProductDialog(Frame cuaSoCha) {
+        this(cuaSoCha, null, null);
+    }
+
+    public UpdateProductDialog(Frame cuaSoCha, SanPham sanPham, Runnable sauKhiLuu) {
         super(cuaSoCha, true);
+        this.sauKhiLuu = sauKhiLuu;
+        if (sanPham != null && sanPham.getMaSP() != null) {
+            SanPham tuCsdl = sanPhamService.getSanPhamTheoMa(sanPham.getMaSP());
+            this.sanPhamDangSua = tuCsdl != null ? tuCsdl : sanPham;
+        }
         khoiTaoGiaoDien();
+        napLoaiSanPham();
+        ganSuKienTinhGia();
+        dienDuLieu();
     }
 
     private void khoiTaoGiaoDien() {
@@ -202,7 +235,7 @@ public class UpdateProductDialog extends JDialog {
         nhanMaSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanMaSanPham);
 
-        oNhapMaSanPham = taoONhapLieuBoGoc("SP241018001", false);
+        oNhapMaSanPham = taoONhapLieuBoGoc("", false);
         oNhapMaSanPham.setBounds(34, 162, 290, 40);
         theChuaModal.add(oNhapMaSanPham);
 
@@ -212,20 +245,28 @@ public class UpdateProductDialog extends JDialog {
         nhanTenSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanTenSanPham);
 
-        oNhapTenSanPham = taoONhapLieuBoGoc("Royal Canin Mini Adult", true);
+        oNhapTenSanPham = taoONhapLieuBoGoc("", true);
         oNhapTenSanPham.setBounds(356, 162, 290, 40);
         theChuaModal.add(oNhapTenSanPham);
 
-        // 5. Hàng 2 (y=214): Loại sản phẩm (w=186), Đơn vị tính (w=186), Giá bán (w=186)
         nhanLoaiSanPham = new JLabel("Loại sản phẩm");
         nhanLoaiSanPham.setBounds(34, 214, 186, 18);
         nhanLoaiSanPham.setFont(phongNhanTruong);
         nhanLoaiSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanLoaiSanPham);
 
-        String[] danhSachLoaiSP = {"Thức ăn", "Phụ kiện", "Vệ sinh", "Thuốc & bổ sung", "Đồ chơi"};
-        hopChonLoaiSanPham = new JComboBox<>(danhSachLoaiSP);
-        hopChonLoaiSanPham.setSelectedItem("Thức ăn");
+        hopChonLoaiSanPham = new JComboBox<>();
+        hopChonLoaiSanPham.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> danhSach, Object giaTri, int chiSo,
+                    boolean dangChon, boolean coTieuDiem) {
+                super.getListCellRendererComponent(danhSach, giaTri, chiSo, dangChon, coTieuDiem);
+                if (giaTri instanceof LoaiSanPham loai) {
+                    setText(loai.getTenLoai());
+                }
+                return this;
+            }
+        });
         hopChonLoaiSanPham.setBounds(34, 236, 186, 40);
         hopChonLoaiSanPham.setFont(phongNhapLieu);
         hopChonLoaiSanPham.setBackground(mauNenOData);
@@ -238,67 +279,64 @@ public class UpdateProductDialog extends JDialog {
         nhanDonViTinh.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanDonViTinh);
 
-        oNhapDonViTinh = taoONhapLieuBoGoc("Gói", true);
+        oNhapDonViTinh = taoONhapLieuBoGoc("", true);
         oNhapDonViTinh.setBounds(247, 236, 186, 40);
         theChuaModal.add(oNhapDonViTinh);
 
-        nhanGiaBan = new JLabel("Giá bán (VNĐ)");
-        nhanGiaBan.setBounds(460, 214, 186, 18);
-        nhanGiaBan.setFont(phongNhanTruong);
-        nhanGiaBan.setForeground(mauChuTieuDe);
-        theChuaModal.add(nhanGiaBan);
-
-        oNhapGiaBan = taoONhapLieuBoGoc("185000", true);
-        oNhapGiaBan.setBounds(460, 236, 186, 40);
-        theChuaModal.add(oNhapGiaBan);
-
-        // 6. Hàng 3 (y=288): Số lượng tồn (w=186) & Trạng thái (w=186)
         nhanSoLuongTon = new JLabel("Số lượng tồn");
-        nhanSoLuongTon.setBounds(34, 288, 186, 18);
+        nhanSoLuongTon.setBounds(460, 214, 186, 18);
         nhanSoLuongTon.setFont(phongNhanTruong);
         nhanSoLuongTon.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanSoLuongTon);
 
-        oNhapSoLuongTon = taoONhapLieuBoGoc("24", true);
-        oNhapSoLuongTon.setBounds(34, 310, 186, 40);
+        oNhapSoLuongTon = taoONhapLieuBoGoc("", true);
+        oNhapSoLuongTon.setBounds(460, 236, 186, 40);
         theChuaModal.add(oNhapSoLuongTon);
 
+        nhanGiaNhap = new JLabel("Giá nhập (VNĐ)");
+        nhanGiaNhap.setBounds(34, 288, 186, 18);
+        nhanGiaNhap.setFont(phongNhanTruong);
+        nhanGiaNhap.setForeground(mauChuTieuDe);
+        theChuaModal.add(nhanGiaNhap);
+
+        oNhapGiaNhap = taoONhapLieuBoGoc("", true);
+        oNhapGiaNhap.setBounds(34, 310, 186, 40);
+        theChuaModal.add(oNhapGiaNhap);
+
+        nhanTienLoi = new JLabel("Tiền lời (VNĐ)");
+        nhanTienLoi.setBounds(247, 288, 186, 18);
+        nhanTienLoi.setFont(phongNhanTruong);
+        nhanTienLoi.setForeground(mauChuTieuDe);
+        theChuaModal.add(nhanTienLoi);
+
+        oNhapTienLoi = taoONhapLieuBoGoc("", true);
+        oNhapTienLoi.setBounds(247, 310, 186, 40);
+        theChuaModal.add(oNhapTienLoi);
+
+        nhanGiaBan = new JLabel("Giá bán (VNĐ)");
+        nhanGiaBan.setBounds(460, 288, 186, 18);
+        nhanGiaBan.setFont(phongNhanTruong);
+        nhanGiaBan.setForeground(mauChuTieuDe);
+        theChuaModal.add(nhanGiaBan);
+
+        oNhapGiaBan = taoONhapLieuBoGoc("", false);
+        oNhapGiaBan.setBounds(460, 310, 186, 40);
+        theChuaModal.add(oNhapGiaBan);
+
         nhanTrangThai = new JLabel("Trạng thái");
-        nhanTrangThai.setBounds(247, 288, 186, 18);
+        nhanTrangThai.setBounds(34, 362, 290, 18);
         nhanTrangThai.setFont(phongNhanTruong);
         nhanTrangThai.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanTrangThai);
 
         hopChonTrangThai = new JComboBox<>(new String[]{"Đang kinh doanh", "Ngừng kinh doanh"});
-        hopChonTrangThai.setSelectedItem("Đang kinh doanh");
-        hopChonTrangThai.setBounds(247, 310, 186, 40);
+        hopChonTrangThai.setBounds(34, 384, 290, 40);
         hopChonTrangThai.setFont(phongNhapLieu);
         hopChonTrangThai.setBackground(mauNenOData);
         hopChonTrangThai.setFocusable(false);
         theChuaModal.add(hopChonTrangThai);
 
-        // 7. Hàng 4 (y=362): Mô tả (w=612, h=72)
-        nhanMoTa = new JLabel("Mô tả");
-        nhanMoTa.setBounds(34, 362, 612, 18);
-        nhanMoTa.setFont(phongNhanTruong);
-        nhanMoTa.setForeground(mauChuTieuDe);
-        theChuaModal.add(nhanMoTa);
-
-        vungNhapMoTa = new JTextArea("Dành cho chó trưởng thành giống nhỏ, dạng hạt khô.");
-        vungNhapMoTa.setFont(phongNhapLieu);
-        vungNhapMoTa.setForeground(mauChuTieuDe);
-        vungNhapMoTa.setBackground(mauNenOData);
-        vungNhapMoTa.setLineWrap(true);
-        vungNhapMoTa.setWrapStyleWord(true);
-        vungNhapMoTa.setBorder(new EmptyBorder(8, 12, 8, 12));
-
-        thanhCuonMoTa = new JScrollPane(vungNhapMoTa);
-        thanhCuonMoTa.setBounds(34, 384, 612, 72);
-        thanhCuonMoTa.setBorder(BorderFactory.createLineBorder(mauVienHop, 1, true));
-        theChuaModal.add(thanhCuonMoTa);
-
-        // 8. Hàng 5 (y=470): Khung cảnh báo nghiệp vụ
-        nhanKhungCanhBao = new JLabel("<html>• Giá bán và số lượng tồn không được âm. Hệ thống hỗ trợ cập nhật trạng thái kinh doanh của sản phẩm.</html>") {
+        nhanKhungCanhBao = new JLabel("<html>• Giá bán = giá nhập + tiền lời, không nhập trực tiếp. Không chuyển sản phẩm sang loại đã ngừng hoạt động. Giá trên hóa đơn cũ không đổi.</html>") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -360,6 +398,7 @@ public class UpdateProductDialog extends JDialog {
         nutLuuCapNhat.setContentAreaFilled(false);
         nutLuuCapNhat.setBorderPainted(false);
         nutLuuCapNhat.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nutLuuCapNhat.addActionListener(suKien -> luuCapNhat());
         theChuaModal.add(nutLuuCapNhat);
 
         theChuaModal.setFocusable(true);
@@ -396,5 +435,183 @@ public class UpdateProductDialog extends JDialog {
         ));
         oNhap.setEditable(choPhepNhap);
         return oNhap;
+    }
+
+    private void napLoaiSanPham() {
+        hopChonLoaiSanPham.removeAllItems();
+        ArrayList<LoaiSanPham> danhSach = loaiSanPhamService.getLoaiSanPhamDangHoatDong();
+        if (danhSach != null) {
+            for (LoaiSanPham loai : danhSach) {
+                hopChonLoaiSanPham.addItem(loai);
+            }
+        }
+        if (sanPhamDangSua != null && sanPhamDangSua.getLoaiSanPham() != null) {
+            boolean daCo = false;
+            LoaiSanPham loaiHienTai = sanPhamDangSua.getLoaiSanPham();
+            for (int i = 0; i < hopChonLoaiSanPham.getItemCount(); i++) {
+                LoaiSanPham loai = hopChonLoaiSanPham.getItemAt(i);
+                if (loai.getMaLoaiSanPham().equals(loaiHienTai.getMaLoaiSanPham())) {
+                    daCo = true;
+                    break;
+                }
+            }
+            if (!daCo) {
+                hopChonLoaiSanPham.addItem(loaiHienTai);
+            }
+        }
+    }
+
+    private void ganSuKienTinhGia() {
+        DocumentListener theoDoi = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent suKien) {
+                capNhatGiaBan();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent suKien) {
+                capNhatGiaBan();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent suKien) {
+                capNhatGiaBan();
+            }
+        };
+        oNhapGiaNhap.getDocument().addDocumentListener(theoDoi);
+        oNhapTienLoi.getDocument().addDocumentListener(theoDoi);
+    }
+
+    private void capNhatGiaBan() {
+        BigDecimal giaNhap = docSoTien(oNhapGiaNhap.getText(), false);
+        BigDecimal tienLoi = docSoTien(oNhapTienLoi.getText(), true);
+        if (giaNhap == null || tienLoi == null) {
+            oNhapGiaBan.setText("");
+            return;
+        }
+        oNhapGiaBan.setText(dinhDangGia.format(giaNhap.add(tienLoi)));
+    }
+
+    private void dienDuLieu() {
+        if (sanPhamDangSua == null) {
+            JOptionPane.showMessageDialog(this, "Không tải được sản phẩm được chọn.",
+                    "Không có dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        oNhapMaSanPham.setText(sanPhamDangSua.getMaSP());
+        oNhapTenSanPham.setText(sanPhamDangSua.getTenSP());
+        oNhapDonViTinh.setText(sanPhamDangSua.getDonViTinh());
+        oNhapGiaNhap.setText(dinhDangGia.format(sanPhamDangSua.getGiaNhap()));
+        oNhapTienLoi.setText(dinhDangGia.format(sanPhamDangSua.getTienLoi()));
+        oNhapSoLuongTon.setText(String.valueOf(sanPhamDangSua.getSoLuongTon()));
+        hopChonTrangThai.setSelectedIndex(sanPhamDangSua.isTrangThai() ? 0 : 1);
+        if (sanPhamDangSua.getLoaiSanPham() != null) {
+            for (int i = 0; i < hopChonLoaiSanPham.getItemCount(); i++) {
+                LoaiSanPham loai = hopChonLoaiSanPham.getItemAt(i);
+                if (loai.getMaLoaiSanPham().equals(sanPhamDangSua.getLoaiSanPham().getMaLoaiSanPham())) {
+                    hopChonLoaiSanPham.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        capNhatGiaBan();
+    }
+
+    private void luuCapNhat() {
+        if (sanPhamDangSua == null) {
+            JOptionPane.showMessageDialog(this, "Không xác định được sản phẩm cần cập nhật.",
+                    "Không có dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String ten = oNhapTenSanPham.getText().trim();
+        String donVi = oNhapDonViTinh.getText().trim();
+        if (ten.isEmpty() || donVi.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Tên sản phẩm và đơn vị tính không được để trống.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        BigDecimal giaNhap = docSoTien(oNhapGiaNhap.getText(), false);
+        BigDecimal tienLoi = docSoTien(oNhapTienLoi.getText(), true);
+        Integer soLuong = docSoNguyen(oNhapSoLuongTon.getText());
+        if (giaNhap == null || tienLoi == null || soLuong == null) {
+            JOptionPane.showMessageDialog(this, "Giá nhập, tiền lời và số lượng tồn phải là số hợp lệ.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        LoaiSanPham loai = (LoaiSanPham) hopChonLoaiSanPham.getSelectedItem();
+        if (loai == null) {
+            JOptionPane.showMessageDialog(this, "Phải chọn loại sản phẩm.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        boolean dangKinhDoanh = hopChonTrangThai.getSelectedIndex() == 0;
+        boolean giuNguyenLoai = sanPhamDangSua.getLoaiSanPham() != null
+                && loai.getMaLoaiSanPham().equals(sanPhamDangSua.getLoaiSanPham().getMaLoaiSanPham());
+        if (!loai.isTrangThai() && !giuNguyenLoai) {
+            JOptionPane.showMessageDialog(this, "Không được chuyển sản phẩm sang loại đang ngừng hoạt động.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (dangKinhDoanh && !loai.isTrangThai()) {
+            JOptionPane.showMessageDialog(this, "Không thể kinh doanh sản phẩm thuộc loại đã ngừng hoạt động.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            sanPhamDangSua.setTenSP(ten);
+            sanPhamDangSua.setDonViTinh(donVi);
+            sanPhamDangSua.setGiaNhap(giaNhap);
+            sanPhamDangSua.setTienLoi(tienLoi);
+            sanPhamDangSua.setSoLuongTon(soLuong);
+            sanPhamDangSua.setTrangThai(dangKinhDoanh);
+            sanPhamDangSua.setLoaiSanPham(loai);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String loi = sanPhamService.capNhatSanPham(sanPhamDangSua);
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this,
+                "Đã cập nhật sản phẩm " + sanPhamDangSua.getMaSP() + ". Giá bán: "
+                        + dinhDangGia.format(sanPhamDangSua.getGiaBan()) + ".",
+                "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        dispose();
+        if (sauKhiLuu != null) {
+            sauKhiLuu.run();
+        }
+    }
+
+    private BigDecimal docSoTien(String chuoi, boolean choPhepKhong) {
+        if (chuoi == null || chuoi.trim().isEmpty()) {
+            return choPhepKhong ? BigDecimal.ZERO : null;
+        }
+        String so = chuoi.trim().replace(" ", "");
+        if (so.matches("\\d{1,3}(\\.\\d{3})+(,\\d+)?")) {
+            so = so.replace(".", "").replace(",", ".");
+        } else {
+            so = so.replace(",", ".");
+        }
+        try {
+            return new BigDecimal(so);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Integer docSoNguyen(String chuoi) {
+        if (chuoi == null || chuoi.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(chuoi.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static DecimalFormat taoDinhDangGia() {
+        DecimalFormatSymbols kyHieu = DecimalFormatSymbols.getInstance(new Locale("vi", "VN"));
+        return new DecimalFormat("#,##0.##", kyHieu);
     }
 }
