@@ -1,6 +1,14 @@
 package view;
 
+
 import app.UserSession;
+import dao.NhanVien_DAO;
+import dao.TaiKhoan_DAO;
+import entity.NhanVien;
+import entity.TaiKhoan;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -99,6 +107,9 @@ public class EmployeeManagementPanel extends JPanel {
     // Danh sách dữ liệu trong bộ nhớ
     private final List<NhanVienItem> danhSachNV = new ArrayList<>();
     private final List<TaiKhoanItem> danhSachTK = new ArrayList<>();
+    private final NhanVien_DAO nhanVienDAO = new NhanVien_DAO();
+    private final TaiKhoan_DAO taiKhoanDAO = new TaiKhoan_DAO();
+
 
     // Các thành phần giao diện
     private JTextField txtTimKiem;
@@ -143,10 +154,41 @@ public class EmployeeManagementPanel extends JPanel {
      * Khởi tạo dữ liệu mẫu khớp với hình ảnh và kịch bản hệ thống.
      */
     private void khoiTaoDuLieu() {
+
         danhSachNV.clear();
         danhSachTK.clear();
 
+        // 1. Lấy dữ liệu từ Database SQL Server nếu có kết nối
+        try {
+            List<NhanVien> listNvDB = nhanVienDAO.getAllNhanVien();
+            List<TaiKhoan> listTkDB = taiKhoanDAO.getAllTaiKhoan();
+
+            if (listNvDB != null && !listNvDB.isEmpty()) {
+                DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                for (NhanVien nv : listNvDB) {
+                    String ns = nv.getNgaySinh() != null ? nv.getNgaySinh().format(fmt) : "01/01/2000";
+                    String tt = nv.isTrangThai() ? "Hoạt động" : "Bị khóa";
+                    String ca = (nv.getMaNV().endsWith("2") || nv.getMaNV().endsWith("4")) ? "Ca tối" : "Ca sáng";
+                    danhSachNV.add(new NhanVienItem(nv.getMaNV(), nv.getHoTen(), nv.getGioiTinh(), ns, nv.getSoDienThoai(), "tranphuc@gmail.com", nv.getVaiTro(), ca, tt));
+                }
+
+                if (listTkDB != null) {
+                    for (TaiKhoan tk : listTkDB) {
+                        String tt = tk.isTrangThai() ? "Hoạt động" : "Bị khóa";
+                        String mnv = tk.getNhanVien() != null ? tk.getNhanVien().getMaNV() : "";
+                        String ht = tk.getNhanVien() != null ? tk.getNhanVien().getHoTen() : "";
+                        danhSachTK.add(new TaiKhoanItem(mnv, ht, tk.getTenDangNhap(), tk.getMatKhau(), tt));
+                    }
+                }
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         // Dữ liệu 4 nhân viên như trong ảnh mẫu
+        System.out.println("[EmployeeManagementPanel] Đang dùng dữ liệu dự phòng (Fallback) vì không lấy được dữ liệu từ DB.");
+
         danhSachNV.add(new NhanVienItem("NV241018001", "Trần Minh Phúc", "Nam", "10/05/1999", "0903456789", "tranphuc@gmail.com", "Chăm sóc", "Ca sáng", "Hoạt động"));
         danhSachNV.add(new NhanVienItem("NV241018002", "Lê Thu Trang", "Nữ", "12/09/2000", "0903987654", "thutrang@gmail.com", "Chăm sóc", "Ca tối", "Hoạt động"));
         danhSachNV.add(new NhanVienItem("NV241018003", "Nguyễn Mai Hân", "Nữ", "07/01/1998", "0851234567", "maihan@gmail.com", "Thu ngân", "Ca sáng", "Hoạt động"));
@@ -259,7 +301,7 @@ public class EmployeeManagementPanel extends JPanel {
                     g2.setColor(new Color(156, 163, 175));
                     g2.setFont(fontPhu);
                     Insets insets = getInsets();
-                    g2.drawString("🔍 Tìm theo mã, tên hoặc SĐT", insets.left + 5, getHeight() / 2 + 5);
+                    g2.drawString("Tìm theo mã, tên hoặc SĐT", insets.left + 5, getHeight() / 2 + 5);
                     g2.dispose();
                 }
             }
@@ -391,15 +433,13 @@ public class EmployeeManagementPanel extends JPanel {
         JPanel panelTieuDeTK = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         panelTieuDeTK.setOpaque(false);
 
-        JLabel lblArrowNote = new JLabel("CHỈ CHỦ CỬA HÀNG MỚI THẤY PHẦN NÀY  ➔ ");
-        lblArrowNote.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblArrowNote.setForeground(new Color(220, 38, 38));
+        
 
         lblTenNhanVienDangXemTK = new JLabel("Thông tin tài khoản");
         lblTenNhanVienDangXemTK.setFont(fontDam);
         lblTenNhanVienDangXemTK.setForeground(mauChuTieuDe);
 
-        panelTieuDeTK.add(lblArrowNote);
+    
         panelTieuDeTK.add(lblTenNhanVienDangXemTK);
         panelHeaderTK.add(panelTieuDeTK, BorderLayout.WEST);
 
@@ -632,6 +672,22 @@ public class EmployeeManagementPanel extends JPanel {
             tableTaiKhoan.getColumnModel().getColumn(i).setCellRenderer(canTrai);
         }
 
+        // Hiển thị mật khẩu dưới dạng văn bản thô (giải mã SHA-256 seed data nếu là chuỗi băm 64 ký tự)
+        tableTaiKhoan.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                setBorder(new EmptyBorder(0, 10, 0, 10));
+                String pass = value != null ? value.toString() : "";
+                if (pass.equalsIgnoreCase("f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc")) {
+                    setText("PetBite@123");
+                } else {
+                    setText(pass);
+                }
+                return c;
+            }
+        });
+
         tableTaiKhoan.getColumnModel().getColumn(3).setCellRenderer(new BadgeTrangThaiRenderer());
 
         if (tableTaiKhoan.getColumnCount() > 4) {
@@ -680,6 +736,63 @@ public class EmployeeManagementPanel extends JPanel {
     // CÁC HỘP THOẠI (DIALOG)
     // =========================================================================
     private void moHopThoaiThemNhanVien() {
+        if (!isChuCuaHang) return;
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm nhân viên", true);
+        dialog.setSize(860, 680);
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        EmployeeAddPanel addPanel = new EmployeeAddPanel(
+            (nvMoi, tkMoi, diaChi) -> {
+                // 1. Lưu Nhân Viên vào Database
+                boolean okNV = false;
+                boolean okTK = false;
+                String errDetail = "";
+                try {
+                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate ns = LocalDate.parse(nvMoi.ngaySinh, fmt);
+                    boolean tt = "Hoạt động".equalsIgnoreCase(nvMoi.trangThai);
+                    String diaChiLuu = (diaChi == null || diaChi.trim().isEmpty()) ? "TP. Hồ Chí Minh" : diaChi.trim();
+                    NhanVien entityNV = new NhanVien(nvMoi.maNV, nvMoi.hoTen, nvMoi.soDienThoai, nvMoi.gioiTinh, ns, diaChiLuu, nvMoi.chucVu, tt);
+                    okNV = nhanVienDAO.themNhanVien(entityNV);
+
+                    // 2. Lưu Tài Khoản vào Database
+                    String maTK = taiKhoanDAO.generateNextMaTK();
+                    TaiKhoan entityTK = new TaiKhoan(tkMoi.tenDangNhap, tkMoi.matKhau, tt, maTK, entityNV);
+                    okTK = taiKhoanDAO.themTaiKhoan(entityTK);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    errDetail = ex.getMessage();
+                }
+
+                if (!okNV) {
+                    JOptionPane.showMessageDialog(dialog, 
+                        "CẢNH BÁO: Không thể ghi dữ liệu vào SQL Server!\n" + 
+                        (errDetail.isEmpty() ? "Vui lòng kiểm tra kết nối Database hoặc số điện thoại bị trùng!" : errDetail) + 
+                        "\n(Dữ liệu chỉ hiển thị tạm trong phiên làm việc hiện tại)", 
+                        "Lỗi Database", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Thêm nhân viên thành công vào Database!\nTài khoản: " + tkMoi.tenDangNhap + " | Mật khẩu: " + tkMoi.matKhau);
+                }
+
+                danhSachNV.add(nvMoi);
+                danhSachTK.add(tkMoi);
+                dialog.dispose();
+                napDuLieuBangNhanVien();
+            },
+            () -> dialog.dispose()
+        );
+
+        String maTuDong = nhanVienDAO.generateNextMaNV();
+        addPanel.setMaNhanVienTuDong(maTuDong);
+
+        dialog.add(addPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+
+    private void moHopThoaiCuThemNhanVien() {
         if (!isChuCuaHang) return;
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm nhân viên mới", true);
@@ -773,6 +886,52 @@ public class EmployeeManagementPanel extends JPanel {
     }
 
     private void moHopThoaiSuaNhanVien(NhanVienItem nv) {
+
+        if (!isChuCuaHang) return;
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Cập nhật nhân viên", true);
+        dialog.setSize(860, 640);
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        EmployeeUpdatePanel panel = new EmployeeUpdatePanel(
+            nv,
+            (updatedNv, diaChi) -> {
+                // Lưu cập nhật Nhân Viên vào Database
+                try {
+                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate ns = LocalDate.parse(updatedNv.ngaySinh, fmt);
+                    boolean tt = "Hoạt động".equalsIgnoreCase(updatedNv.trangThai);
+                    NhanVien entityNV = new NhanVien(updatedNv.maNV, updatedNv.hoTen, updatedNv.soDienThoai, updatedNv.gioiTinh, ns, diaChi, updatedNv.chucVu, tt);
+                    nhanVienDAO.capNhatNhanVien(entityNV);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                for (TaiKhoanItem tk : danhSachTK) {
+                    if (tk.maNV.equalsIgnoreCase(updatedNv.maNV)) {
+                        tk.hoTen = updatedNv.hoTen;
+                        break;
+                    }
+                }
+
+                JOptionPane.showMessageDialog(dialog, "Cập nhật nhân viên thành công!");
+                dialog.dispose();
+                napDuLieuBangNhanVien();
+
+                if (panelTaiKhoanWrapper.isVisible() && lblTenNhanVienDangXemTK.getText().contains(updatedNv.maNV)) {
+                    hienThiBangTaiKhoanMotNhanVien(updatedNv);
+                }
+            },
+            () -> dialog.dispose()
+        );
+
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+
+    private void moHopThoaiCuSuaNhanVien(NhanVienItem nv) {
         if (!isChuCuaHang) return;
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Cập nhật nhân viên: " + nv.maNV, true);
@@ -859,6 +1018,60 @@ public class EmployeeManagementPanel extends JPanel {
     }
 
     private void moHopThoaiSuaTaiKhoan(TaiKhoanItem tk) {
+        if (!isChuCuaHang) return;
+
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Cập nhật tài khoản", true);
+        dialog.setSize(860, 560);
+        dialog.setResizable(false);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+
+        AccountUpdatePanel panel = new AccountUpdatePanel(
+            tk,
+            updatedTk -> {
+                // Lưu cập nhật Tài Khoản vào Database
+                boolean ok = false;
+                String errDetail = "";
+                try {
+                    boolean tt = "Hoạt động".equalsIgnoreCase(updatedTk.trangThai);
+                    ok = taiKhoanDAO.capNhatTaiKhoan(updatedTk.maNV, updatedTk.matKhau, tt);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    errDetail = ex.getMessage();
+                }
+
+                if (!ok) {
+                    JOptionPane.showMessageDialog(dialog, 
+                        "CẢNH BÁO: Không thể cập nhật vào SQL Server!\n" + 
+                        (errDetail.isEmpty() ? "Vui lòng kiểm tra lại kết nối Database!" : errDetail) + 
+                        "\n(Thay đổi chỉ lưu tạm trong phiên hiện tại)", 
+                        "Cảnh báo Database", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Cập nhật tài khoản thành công vào Database!");
+                }
+
+                for (NhanVienItem nv : danhSachNV) {
+                    if (nv.maNV.equalsIgnoreCase(updatedTk.maNV)) {
+                        nv.trangThai = updatedTk.trangThai;
+                        break;
+                    }
+                }
+                dialog.dispose();
+
+                NhanVienItem nv = timNhanVien(updatedTk.maNV);
+                if (nv != null) {
+                    hienThiBangTaiKhoanMotNhanVien(nv);
+                }
+                napDuLieuBangNhanVien();
+            },
+            () -> dialog.dispose()
+        );
+
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+
+    private void moHopThoaiCuSuaTaiKhoan(TaiKhoanItem tk) {
         if (!isChuCuaHang) return;
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Chỉnh sửa tài khoản: " + tk.tenDangNhap, true);

@@ -1,5 +1,8 @@
 package dao;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.sql.Statement;
 import connectDB.ConnectDB;
 import entity.NhanVien;
 import entity.TaiKhoan;
@@ -197,5 +200,119 @@ public class TaiKhoan_DAO {
         }
 
         return new LoginResult(LoginStatus.INVALID_CREDENTIALS, null, "Tên đăng nhập hoặc mật khẩu không chính xác!");
+    }
+
+    public List<TaiKhoan> getAllTaiKhoan() {
+        List<TaiKhoan> list = new ArrayList<>();
+        Connection con = ConnectDB.getConnection();
+        if (con == null) return list;
+
+        String sql = "SELECT t.maTK, t.tenDangNhap, t.matKhau, t.trangThai, t.maNV, n.hoTen "
+                   + "FROM TaiKhoan t LEFT JOIN NhanVien n ON t.maNV = n.maNV";
+        try (Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String maTK = rs.getString("maTK");
+                String tenDangNhap = rs.getString("tenDangNhap");
+                String matKhau = rs.getString("matKhau");
+                boolean trangThai = rs.getBoolean("trangThai");
+                String maNV = rs.getString("maNV");
+                String hoTen = rs.getString("hoTen");
+
+                NhanVien nv = new NhanVien();
+                nv.setMaNV(maNV);
+                nv.setHoTen(hoTen);
+
+                list.add(new TaiKhoan(tenDangNhap, matKhau, trangThai, maTK, nv));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public boolean themTaiKhoan(TaiKhoan tk) {
+        Connection con = ConnectDB.getConnection();
+        if (con == null) {
+            System.err.println("[themTaiKhoan] ConnectDB.getConnection() trả về null!");
+            return false;
+        }
+
+        String sql = "INSERT INTO TaiKhoan (maTK, tenDangNhap, matKhau, trangThai, maNV) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, tk.getMaTaiKhoan());
+            ps.setString(2, tk.getTenDangNhap());
+            ps.setString(3, tk.getMatKhau());
+            ps.setBoolean(4, tk.isTrangThai());
+            ps.setString(5, tk.getNhanVien() != null ? tk.getNhanVien().getMaNV() : null);
+
+            int rows = ps.executeUpdate();
+            System.out.println("[themTaiKhoan] Đã thêm thành công: " + tk.getMaTaiKhoan() + ", rows=" + rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            System.err.println("[themTaiKhoan] Lỗi SQL khi thêm tài khoản " + tk.getMaTaiKhoan() + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public boolean capNhatTaiKhoan(String maNV, String matKhauMoi, boolean trangThai) {
+        Connection con = ConnectDB.getConnection();
+        if (con == null) {
+            System.err.println("[capNhatTaiKhoan] ConnectDB.getConnection() trả về null!");
+            return false;
+        }
+
+        String sql;
+        boolean doiMatKhau = matKhauMoi != null && !matKhauMoi.trim().isEmpty();
+        if (doiMatKhau) {
+            sql = "UPDATE TaiKhoan SET matKhau = ?, trangThai = ? WHERE maNV = ?";
+        } else {
+            sql = "UPDATE TaiKhoan SET trangThai = ? WHERE maNV = ?";
+        }
+
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            if (doiMatKhau) {
+                ps.setString(1, matKhauMoi);
+                ps.setBoolean(2, trangThai);
+                ps.setString(3, maNV);
+            } else {
+                ps.setBoolean(1, trangThai);
+                ps.setString(2, maNV);
+            }
+            int rows = ps.executeUpdate();
+            System.out.println("[capNhatTaiKhoan] Đã cập nhật thành công cho maNV=" + maNV + ", rows=" + rows);
+            return rows > 0;
+        } catch (SQLException e) {
+            System.err.println("[capNhatTaiKhoan] Lỗi SQL khi cập nhật tài khoản: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public String generateNextMaTK() {
+        Connection con = ConnectDB.getConnection();
+        String prefix = "TK" + LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyMMdd"));
+        if (con == null) {
+            return prefix + "001";
+        }
+        String sql = "SELECT MAX(maTK) AS maxMa FROM TaiKhoan WHERE maTK LIKE ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, prefix + "%");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String maxMa = rs.getString("maxMa");
+                    if (maxMa != null && maxMa.length() >= prefix.length() + 3) {
+                        int stt = Integer.parseInt(maxMa.substring(prefix.length())) + 1;
+                        return prefix + String.format("%03d", stt);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return prefix + "001";
     }
 }
