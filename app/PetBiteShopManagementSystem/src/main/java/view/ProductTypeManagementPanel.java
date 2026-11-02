@@ -2,8 +2,7 @@ package view;
 
 import app.UserSession;
 import entity.LoaiSanPham;
-import service.LoaiSanPham_Service;
-import service.impl.LoaiSanPham_ServiceImpl;
+import dao.LoaiSanPham_DAO;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -93,7 +92,7 @@ public class ProductTypeManagementPanel extends JPanel {
     private JPanel khungPhanTrang;
     private JLabel nhanThongKePhanTrang;
     private JPanel khungCacNutChuyenTrang;
-    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
     private final ArrayList<LoaiSanPham> danhSachLoc = new ArrayList<>();
     private final ArrayList<LoaiSanPham> danhSachTrang = new ArrayList<>();
     private static final int SO_DONG_MOI_TRANG = 5;
@@ -392,7 +391,7 @@ public class ProductTypeManagementPanel extends JPanel {
         } else if (hopChonTrangThai.getSelectedIndex() == 2) {
             trangThai = Boolean.FALSE;
         }
-        ArrayList<LoaiSanPham> ketQua = loaiSanPhamService.locLoaiSanPham(
+        ArrayList<LoaiSanPham> ketQua = loaiSanPhamDAO.locLoaiSanPham(
                 oNhapTimKiem.getText(), trangThai, kieuSapXepDangChon());
         danhSachLoc.clear();
         if (ketQua == null) {
