@@ -1,8 +1,8 @@
 package view;
 
 import entity.LoaiSanPham;
-import service.LoaiSanPham_Service;
-import service.impl.LoaiSanPham_ServiceImpl;
+import app.UserSession;
+import dao.LoaiSanPham_DAO;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -85,7 +85,7 @@ public class AddProductTypeDialog extends JDialog {
     private JButton nutHuyBo;
     private JButton nutLuuLoaiSanPham;
     private Runnable sauKhiLuu;
-    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
 
     // Tọa độ phục vụ kéo thả cửa sổ modal
     private Point diemBamChuot;
@@ -407,6 +407,12 @@ public class AddProductTypeDialog extends JDialog {
     }
 
     private void luuLoaiSanPham() {
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ chủ cửa hàng được thêm, cập nhật hoặc đổi trạng thái loại sản phẩm.",
+                    "Không có quyền", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         String tenLoai = oNhapTenLoaiSanPham.getText().trim();
         if (tenLoai.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên loại sản phẩm không được để trống.",
@@ -422,7 +428,18 @@ public class AddProductTypeDialog extends JDialog {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String loi = loaiSanPhamService.themLoaiSanPham(loai);
+        Boolean trungTen = loaiSanPhamDAO.tenLoaiDaTonTai(loai.getTenLoai(), null);
+        if (trungTen == null) {
+            JOptionPane.showMessageDialog(this, "Không kết nối được cơ sở dữ liệu.",
+                    "Không lưu được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (trungTen) {
+            JOptionPane.showMessageDialog(this, "Tên loại sản phẩm đã tồn tại.",
+                    "Không lưu được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        String loi = loaiSanPhamDAO.themLoaiSanPham(loai);
         if (loi != null) {
             JOptionPane.showMessageDialog(this, loi, "Không lưu được", JOptionPane.ERROR_MESSAGE);
             return;

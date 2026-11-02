@@ -1,10 +1,9 @@
 package view;
 
 import entity.LoaiSanPham;
-import service.LoaiSanPham_Service;
-import service.SanPham_Service;
-import service.impl.LoaiSanPham_ServiceImpl;
-import service.impl.SanPham_ServiceImpl;
+import app.UserSession;
+import dao.LoaiSanPham_DAO;
+import dao.SanPham_DAO;
 import entity.SanPham;
 import java.awt.Color;
 import java.awt.Component;
@@ -110,8 +109,8 @@ public class AddProductDialog extends JDialog {
     private JButton nutHuyBo;
     private JButton nutLuuSanPham;
     private Runnable sauKhiLuu;
-    private final SanPham_Service sanPhamService = new SanPham_ServiceImpl();
-    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final SanPham_DAO sanPhamDAO = new SanPham_DAO();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
     private final DecimalFormat dinhDangGia = taoDinhDangGia();
 
     private Point diemBamChuot;
@@ -463,7 +462,7 @@ public class AddProductDialog extends JDialog {
 
     private void napLoaiDangHoatDong() {
         hopChonLoaiSanPham.removeAllItems();
-        ArrayList<LoaiSanPham> danhSach = loaiSanPhamService.getLoaiSanPhamDangHoatDong();
+        ArrayList<LoaiSanPham> danhSach = loaiSanPhamDAO.getLoaiSanPhamDangHoatDong();
         if (danhSach == null || danhSach.isEmpty()) {
             nutLuuSanPham.setEnabled(false);
             JOptionPane.showMessageDialog(this, "Không có loại sản phẩm đang hoạt động để thêm sản phẩm.",
@@ -506,6 +505,12 @@ public class AddProductDialog extends JDialog {
     }
 
     private void luuSanPham() {
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ chủ cửa hàng được thêm, cập nhật hoặc đổi trạng thái sản phẩm.",
+                    "Không có quyền", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         String ten = oNhapTenSanPham.getText().trim();
         String donVi = oNhapDonViTinh.getText().trim();
         if (ten.isEmpty() || donVi.isEmpty()) {
@@ -540,7 +545,13 @@ public class AddProductDialog extends JDialog {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String loi = sanPhamService.themSanPham(sanPham);
+        LoaiSanPham loaiTrongCsdl = loaiSanPhamDAO.getLoaiSanPhamTheoMa(loai.getMaLoaiSanPham());
+        if (loaiTrongCsdl == null || !loaiTrongCsdl.isTrangThai()) {
+            JOptionPane.showMessageDialog(this, "Chỉ được thêm sản phẩm vào loại đang hoạt động.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String loi = sanPhamDAO.themSanPham(sanPham);
         if (loi != null) {
             JOptionPane.showMessageDialog(this, loi, "Không lưu được", JOptionPane.ERROR_MESSAGE);
             return;

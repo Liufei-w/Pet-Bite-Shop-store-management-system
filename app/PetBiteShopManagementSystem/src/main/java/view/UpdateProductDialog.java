@@ -1,10 +1,9 @@
 package view;
 
 import entity.LoaiSanPham;
-import service.LoaiSanPham_Service;
-import service.SanPham_Service;
-import service.impl.LoaiSanPham_ServiceImpl;
-import service.impl.SanPham_ServiceImpl;
+import app.UserSession;
+import dao.LoaiSanPham_DAO;
+import dao.SanPham_DAO;
 import entity.SanPham;
 import java.awt.Color;
 import java.awt.Component;
@@ -107,8 +106,8 @@ public class UpdateProductDialog extends JDialog {
     private JButton nutLuuCapNhat;
     private SanPham sanPhamDangSua;
     private Runnable sauKhiLuu;
-    private final SanPham_Service sanPhamService = new SanPham_ServiceImpl();
-    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final SanPham_DAO sanPhamDAO = new SanPham_DAO();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
     private final DecimalFormat dinhDangGia = taoDinhDangGia();
 
     private Point diemBamChuot;
@@ -121,7 +120,7 @@ public class UpdateProductDialog extends JDialog {
         super(cuaSoCha, true);
         this.sauKhiLuu = sauKhiLuu;
         if (sanPham != null && sanPham.getMaSP() != null) {
-            SanPham tuCsdl = sanPhamService.getSanPhamTheoMa(sanPham.getMaSP());
+            SanPham tuCsdl = sanPhamDAO.getSanPhamTheoMa(sanPham.getMaSP());
             this.sanPhamDangSua = tuCsdl != null ? tuCsdl : sanPham;
         }
         khoiTaoGiaoDien();
@@ -439,7 +438,7 @@ public class UpdateProductDialog extends JDialog {
 
     private void napLoaiSanPham() {
         hopChonLoaiSanPham.removeAllItems();
-        ArrayList<LoaiSanPham> danhSach = loaiSanPhamService.getLoaiSanPhamDangHoatDong();
+        ArrayList<LoaiSanPham> danhSach = loaiSanPhamDAO.getLoaiSanPhamDangHoatDong();
         if (danhSach != null) {
             for (LoaiSanPham loai : danhSach) {
                 hopChonLoaiSanPham.addItem(loai);
@@ -516,6 +515,12 @@ public class UpdateProductDialog extends JDialog {
     }
 
     private void luuCapNhat() {
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ chủ cửa hàng được thêm, cập nhật hoặc đổi trạng thái sản phẩm.",
+                    "Không có quyền", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         if (sanPhamDangSua == null) {
             JOptionPane.showMessageDialog(this, "Không xác định được sản phẩm cần cập nhật.",
                     "Không có dữ liệu", JOptionPane.WARNING_MESSAGE);
@@ -543,15 +548,27 @@ public class UpdateProductDialog extends JDialog {
             return;
         }
         boolean dangKinhDoanh = hopChonTrangThai.getSelectedIndex() == 0;
-        boolean giuNguyenLoai = sanPhamDangSua.getLoaiSanPham() != null
-                && loai.getMaLoaiSanPham().equals(sanPhamDangSua.getLoaiSanPham().getMaLoaiSanPham());
-        if (!loai.isTrangThai() && !giuNguyenLoai) {
+        SanPham hienTai = sanPhamDAO.getSanPhamTheoMa(sanPhamDangSua.getMaSP());
+        if (hienTai == null) {
+            JOptionPane.showMessageDialog(this, "Sản phẩm không còn tồn tại.",
+                    "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        LoaiSanPham loaiTrongCsdl = loaiSanPhamDAO.getLoaiSanPhamTheoMa(loai.getMaLoaiSanPham());
+        if (loaiTrongCsdl == null) {
+            JOptionPane.showMessageDialog(this, "Phải chọn loại sản phẩm.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        boolean doiLoai = hienTai.getLoaiSanPham() == null
+                || !loaiTrongCsdl.getMaLoaiSanPham().equals(hienTai.getLoaiSanPham().getMaLoaiSanPham());
+        if (doiLoai && !loaiTrongCsdl.isTrangThai()) {
             JOptionPane.showMessageDialog(this, "Không được chuyển sản phẩm sang loại đang ngừng hoạt động.",
                     "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        if (dangKinhDoanh && !loai.isTrangThai()) {
-            JOptionPane.showMessageDialog(this, "Không thể kinh doanh sản phẩm thuộc loại đã ngừng hoạt động.",
+        if (dangKinhDoanh && !loaiTrongCsdl.isTrangThai()) {
+            JOptionPane.showMessageDialog(this, "Không thể chuyển sang đang kinh doanh khi loại sản phẩm đã ngừng hoạt động.",
                     "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -562,12 +579,12 @@ public class UpdateProductDialog extends JDialog {
             sanPhamDangSua.setTienLoi(tienLoi);
             sanPhamDangSua.setSoLuongTon(soLuong);
             sanPhamDangSua.setTrangThai(dangKinhDoanh);
-            sanPhamDangSua.setLoaiSanPham(loai);
+            sanPhamDangSua.setLoaiSanPham(loaiTrongCsdl);
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String loi = sanPhamService.capNhatSanPham(sanPhamDangSua);
+        String loi = sanPhamDAO.capNhatSanPham(sanPhamDangSua);
         if (loi != null) {
             JOptionPane.showMessageDialog(this, loi, "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
             return;

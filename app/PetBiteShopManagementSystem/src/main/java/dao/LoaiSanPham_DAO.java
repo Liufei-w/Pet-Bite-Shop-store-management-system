@@ -178,6 +178,94 @@ public class LoaiSanPham_DAO {
         }
     }
 
+    /** null khi không kết nối hoặc câu lệnh lỗi. */
+    public Boolean tenLoaiDaTonTai(String tenLoai, String maLoaiBoQua) {
+        Connection con = ketNoi();
+        if (con == null || tenLoai == null) {
+            return null;
+        }
+        try {
+            return tenLoaiDaTonTai(con, tenLoai, maLoaiBoQua);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /** null khi không kết nối hoặc câu lệnh lỗi. */
+    public Integer demSanPhamLienKet(String maLoaiSP) {
+        Connection con = ketNoi();
+        if (con == null || maLoaiSP == null) {
+            return null;
+        }
+        try {
+            return demSanPhamLienKet(con, maLoaiSP);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /** Sinh mã rồi ghi. Trả về null khi thành công. Mã được gán vào loại sản phẩm. */
+    public String themLoaiSanPham(LoaiSanPham loai) {
+        Connection con = ketNoi();
+        if (con == null) {
+            return "Không kết nối được cơ sở dữ liệu.";
+        }
+        boolean daBatDau = false;
+        try {
+            con.setAutoCommit(false);
+            daBatDau = true;
+            loai.setMaLoaiSanPham(sinhMaLoaiSanPham(con));
+            them(con, loai);
+            con.commit();
+            return null;
+        } catch (SQLException ex) {
+            rollback(con, daBatDau);
+            if (ex.getErrorCode() == 2627 || ex.getErrorCode() == 2601) {
+                return "Tên loại sản phẩm đã tồn tại.";
+            }
+            if (ex.getMessage() != null && ex.getMessage().contains("số thứ tự")) {
+                return ex.getMessage();
+            }
+            ex.printStackTrace();
+            return "Không lưu được loại sản phẩm.";
+        } catch (IllegalArgumentException ex) {
+            rollback(con, daBatDau);
+            return ex.getMessage();
+        } finally {
+            khoiPhucAutoCommit(con, daBatDau);
+        }
+    }
+
+    /** Trả về null khi thành công. */
+    public String capNhatLoaiSanPham(LoaiSanPham loai) {
+        Connection con = ketNoi();
+        if (con == null) {
+            return "Không kết nối được cơ sở dữ liệu.";
+        }
+        boolean daBatDau = false;
+        try {
+            con.setAutoCommit(false);
+            daBatDau = true;
+            if (capNhat(con, loai) == 0) {
+                con.rollback();
+                return "Không cập nhật được loại sản phẩm.";
+            }
+            con.commit();
+            return null;
+        } catch (SQLException ex) {
+            rollback(con, daBatDau);
+            if (ex.getErrorCode() == 2627 || ex.getErrorCode() == 2601) {
+                return "Tên loại sản phẩm đã tồn tại.";
+            }
+            ex.printStackTrace();
+            return "Không cập nhật được loại sản phẩm.";
+        } finally {
+            khoiPhucAutoCommit(con, daBatDau);
+        }
+    }
+
     public int capNhat(Connection con, LoaiSanPham loai) throws SQLException {
         String sql = "UPDATE LoaiSanPham SET tenLoaiSP = ?, moTa = ?, trangThai = ? WHERE maLoaiSP = ?";
         try (PreparedStatement statement = con.prepareStatement(sql)) {
@@ -225,5 +313,27 @@ public class LoaiSanPham_DAO {
     private Connection ketNoi() {
         ConnectDB.getInstance();
         return ConnectDB.getConnection();
+    }
+
+    private void rollback(Connection con, boolean daBatDau) {
+        if (!daBatDau) {
+            return;
+        }
+        try {
+            con.rollback();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void khoiPhucAutoCommit(Connection con, boolean daBatDau) {
+        if (!daBatDau) {
+            return;
+        }
+        try {
+            con.setAutoCommit(true);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 }

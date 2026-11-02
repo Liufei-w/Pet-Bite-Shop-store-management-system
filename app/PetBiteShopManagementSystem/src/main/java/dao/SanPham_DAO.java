@@ -200,6 +200,60 @@ public class SanPham_DAO {
         }
     }
 
+    /** Sinh mã rồi ghi. Trả về null khi thành công. Mã được gán vào sản phẩm. */
+    public String themSanPham(SanPham sanPham) {
+        Connection con = ketNoi();
+        if (con == null) {
+            return "Không kết nối được cơ sở dữ liệu.";
+        }
+        boolean daBatDau = false;
+        try {
+            con.setAutoCommit(false);
+            daBatDau = true;
+            sanPham.setMaSP(sinhMa(con));
+            them(con, sanPham);
+            con.commit();
+            return null;
+        } catch (SQLException ex) {
+            rollback(con, daBatDau);
+            if (ex.getMessage() != null && ex.getMessage().contains("số thứ tự")) {
+                return ex.getMessage();
+            }
+            ex.printStackTrace();
+            return "Không lưu được sản phẩm.";
+        } catch (IllegalArgumentException ex) {
+            rollback(con, daBatDau);
+            return ex.getMessage();
+        } finally {
+            khoiPhucAutoCommit(con, daBatDau);
+        }
+    }
+
+    /** Chỉ cập nhật bảng SanPham. donGia đã chốt trên hóa đơn không bị sửa. Trả về null khi thành công. */
+    public String capNhatSanPham(SanPham sanPham) {
+        Connection con = ketNoi();
+        if (con == null) {
+            return "Không kết nối được cơ sở dữ liệu.";
+        }
+        boolean daBatDau = false;
+        try {
+            con.setAutoCommit(false);
+            daBatDau = true;
+            if (capNhat(con, sanPham) == 0) {
+                con.rollback();
+                return "Không cập nhật được sản phẩm.";
+            }
+            con.commit();
+            return null;
+        } catch (SQLException ex) {
+            rollback(con, daBatDau);
+            ex.printStackTrace();
+            return "Không cập nhật được sản phẩm.";
+        } finally {
+            khoiPhucAutoCommit(con, daBatDau);
+        }
+    }
+
     /** Chỉ cập nhật bảng SanPham. donGia đã chốt trên hóa đơn không nằm trong câu lệnh này. */
     public int capNhat(Connection con, SanPham sanPham) throws SQLException {
         String sql = "UPDATE SanPham SET tenSP = ?, donViTinh = ?, giaNhap = ?, tienLoi = ?, "
@@ -261,5 +315,27 @@ public class SanPham_DAO {
     private Connection ketNoi() {
         ConnectDB.getInstance();
         return ConnectDB.getConnection();
+    }
+
+    private void rollback(Connection con, boolean daBatDau) {
+        if (!daBatDau) {
+            return;
+        }
+        try {
+            con.rollback();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void khoiPhucAutoCommit(Connection con, boolean daBatDau) {
+        if (!daBatDau) {
+            return;
+        }
+        try {
+            con.setAutoCommit(true);
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
 }

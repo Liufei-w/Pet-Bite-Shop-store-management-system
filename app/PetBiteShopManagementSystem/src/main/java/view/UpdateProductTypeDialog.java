@@ -1,8 +1,8 @@
 package view;
 
 import entity.LoaiSanPham;
-import service.LoaiSanPham_Service;
-import service.impl.LoaiSanPham_ServiceImpl;
+import app.UserSession;
+import dao.LoaiSanPham_DAO;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
@@ -84,7 +84,7 @@ public class UpdateProductTypeDialog extends JDialog {
     private JButton nutLuuCapNhat;
     private LoaiSanPham loaiDangSua;
     private Runnable sauKhiLuu;
-    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
 
     // Tọa độ phục vụ kéo thả cửa sổ modal
     private Point diemBamChuot;
@@ -97,7 +97,7 @@ public class UpdateProductTypeDialog extends JDialog {
         super(cuaSoCha, true);
         this.sauKhiLuu = sauKhiLuu;
         if (loai != null && loai.getMaLoaiSanPham() != null) {
-            LoaiSanPham tuCsdl = loaiSanPhamService.getLoaiSanPhamTheoMa(loai.getMaLoaiSanPham());
+            LoaiSanPham tuCsdl = loaiSanPhamDAO.getLoaiSanPhamTheoMa(loai.getMaLoaiSanPham());
             this.loaiDangSua = tuCsdl != null ? tuCsdl : loai;
         }
         khoiTaoGiaoDien();
@@ -375,7 +375,13 @@ public class UpdateProductTypeDialog extends JDialog {
     }
 
     private void luuCapNhat() {
-        if (loaiDangSua == null) {
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ chủ cửa hàng được thêm, cập nhật hoặc đổi trạng thái loại sản phẩm.",
+                    "Không có quyền", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (loaiDangSua == null || loaiDangSua.getMaLoaiSanPham() == null) {
             JOptionPane.showMessageDialog(this, "Không xác định được loại sản phẩm cần cập nhật.",
                     "Không có dữ liệu", JOptionPane.WARNING_MESSAGE);
             return;
@@ -386,15 +392,49 @@ public class UpdateProductTypeDialog extends JDialog {
                     "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        boolean muonHoatDong = hopChonTrangThai.getSelectedIndex() == 0;
+        LoaiSanPham hienTai = loaiSanPhamDAO.getLoaiSanPhamTheoMa(loaiDangSua.getMaLoaiSanPham());
+        if (hienTai == null) {
+            JOptionPane.showMessageDialog(this, "Loại sản phẩm không còn tồn tại.",
+                    "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        Boolean trungTen = loaiSanPhamDAO.tenLoaiDaTonTai(tenLoai, loaiDangSua.getMaLoaiSanPham());
+        if (trungTen == null) {
+            JOptionPane.showMessageDialog(this, "Không kết nối được cơ sở dữ liệu.",
+                    "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (trungTen) {
+            JOptionPane.showMessageDialog(this, "Tên loại sản phẩm đã tồn tại.",
+                    "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (hienTai.isTrangThai() && !muonHoatDong) {
+            Integer soLienKet = loaiSanPhamDAO.demSanPhamLienKet(loaiDangSua.getMaLoaiSanPham());
+            if (soLienKet == null) {
+                JOptionPane.showMessageDialog(this, "Không kết nối được cơ sở dữ liệu.",
+                        "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (soLienKet > 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Loại này còn " + soLienKet
+                                + " sản phẩm liên kết, kể cả sản phẩm đã ngừng kinh doanh. "
+                                + "Hãy chuyển các sản phẩm sang loại khác trước khi ngừng hoạt động.",
+                        "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
         try {
             loaiDangSua.setTenLoai(tenLoai);
             loaiDangSua.setMoTa(vungNhapMoTa.getText());
-            loaiDangSua.setTrangThai(hopChonTrangThai.getSelectedIndex() == 0);
+            loaiDangSua.setTrangThai(muonHoatDong);
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        String loi = loaiSanPhamService.capNhatLoaiSanPham(loaiDangSua);
+        String loi = loaiSanPhamDAO.capNhatLoaiSanPham(loaiDangSua);
         if (loi != null) {
             JOptionPane.showMessageDialog(this, loi, "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
             return;
