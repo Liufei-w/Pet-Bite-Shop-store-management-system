@@ -106,20 +106,20 @@ public class ThongKe_DAO {
         return data;
     }
 
-    /** 3. Thống kê lượt sử dụng dịch vụ (UC035) */
     public ArrayList<Object[]> getThongKeDichVu(String tuNgay, String denNgay) {
         ArrayList<Object[]> data = new ArrayList<>();
-        String sql = "SELECT dv.maDV, dv.tenDV, dv.giaDV, " +
+        // Sửa 'giaDV' thành 'giaDichVu' cho khớp với cấu trúc bảng trong CSDL
+        String sql = "SELECT dv.maDV, dv.tenDV, dv.giaDichVu, " +
                      "       COUNT(ct.maLichHen) AS soLuot, " +
-                     "       (COUNT(ct.maLichHen) * dv.giaDV) AS tongDoanhThuDV " +
+                     "       (COUNT(ct.maLichHen) * dv.giaDichVu) AS tongDoanhThuDV " +
                      "FROM DichVu dv " +
                      "JOIN ChiTietLichHen ct ON dv.maDV = ct.maDV " +
                      "JOIN LichHen lh ON ct.maLichHen = lh.maLichHen " +
                      "WHERE lh.trangThai = N'Hoàn thành' AND CAST(lh.ngayGioHen AS DATE) BETWEEN ? AND ? " +
-                     "GROUP BY dv.maDV, dv.tenDV, dv.giaDV";
+                     "GROUP BY dv.maDV, dv.tenDV, dv.giaDichVu";
 
         try {
-            Connection con = ConnectDB.getInstance().getConnection();
+            Connection con = ConnectDB.getConnection();
             PreparedStatement pst = con.prepareStatement(sql);
             pst.setString(1, tuNgay);
             pst.setString(2, denNgay);
@@ -131,7 +131,7 @@ public class ThongKe_DAO {
                     stt++,
                     rs.getString("maDV"),
                     rs.getString("tenDV"),
-                    rs.getDouble("giaDV"),
+                    rs.getDouble("giaDichVu"), // Sửa ở đây luôn để lấy đúng tên cột
                     rs.getInt("soLuot"),
                     rs.getDouble("tongDoanhThuDV")
                 };

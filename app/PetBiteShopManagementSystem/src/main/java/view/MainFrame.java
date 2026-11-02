@@ -38,8 +38,8 @@ public class MainFrame extends JFrame {
         contentPanel.add(new ProductTypeManagementPanel(), "PRODUCT_TYPES");
         contentPanel.add(new ProductManagementPanel(), "PRODUCTS");
         contentPanel.add(new ServiceManagementPanel(), "SERVICES");
-        contentPanel.add(new PlaceholderPanel("QUẢN LÝ LỊCH HẸN"), "APPOINTMENTS");
-        contentPanel.add(new PlaceholderPanel("LỊCH SỬ CHĂM SÓC"), "HISTORY");
+        contentPanel.add(new AppointmentManagementPanel(), "APPOINTMENTS");
+        contentPanel.add(new CareHistoryManagementPanel(), "HISTORY");
         contentPanel.add(new BanHangPanel(), "BANHANG");
         contentPanel.add(new InvoiceManagementPanel(), "INVOICES");
         contentPanel.add(new PlaceholderPanel("PHIẾU TRẢ HÀNG & HOÀN TIỀN"), "RETURNS");
