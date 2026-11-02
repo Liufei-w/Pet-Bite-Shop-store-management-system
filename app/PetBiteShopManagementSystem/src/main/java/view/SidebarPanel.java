@@ -80,7 +80,7 @@ public class SidebarPanel extends JPanel {
         addMenuItem(menuListPanel, "INVOICES", "Hóa đơn");
         addMenuItem(menuListPanel, "RETURNS", "Phiếu trả hàng");
         addMenuItem(menuListPanel, "EMPLOYEES", "Nhân viên");
-        addMenuItem(menuListPanel, "ACCOUNTS", "Tài khoản");
+
 
         List<String[]> statSubs = new ArrayList<>();
         statSubs.add(new String[]{"STAT_REVENUE", "Thống kê doanh thu"});

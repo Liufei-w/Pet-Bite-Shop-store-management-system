@@ -2,6 +2,8 @@ package app;
 
 import javax.swing.SwingUtilities; 
 
+import view.LoginFrame;
+
 public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -10,7 +12,7 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            view.LoginFrame loginFrame = new view.LoginFrame();
+            LoginFrame loginFrame = new LoginFrame();
             loginFrame.setVisible(true);
         });
     }

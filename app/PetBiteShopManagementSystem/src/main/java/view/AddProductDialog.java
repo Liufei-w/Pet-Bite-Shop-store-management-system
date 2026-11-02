@@ -1,6 +1,12 @@
 package view;
 
+import entity.LoaiSanPham;
+import app.UserSession;
+import dao.LoaiSanPham_DAO;
+import dao.SanPham_DAO;
+import entity.SanPham;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -18,17 +24,25 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.math.BigDecimal;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Locale;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.border.EmptyBorder;
 
 /**
@@ -76,9 +90,13 @@ public class AddProductDialog extends JDialog {
     private JTextField oNhapTenSanPham;
 
     private JLabel nhanLoaiSanPham;
-    private JComboBox<String> hopChonLoaiSanPham;
+    private JComboBox<LoaiSanPham> hopChonLoaiSanPham;
     private JLabel nhanDonViTinh;
     private JTextField oNhapDonViTinh;
+    private JLabel nhanGiaNhap;
+    private JTextField oNhapGiaNhap;
+    private JLabel nhanTienLoi;
+    private JTextField oNhapTienLoi;
     private JLabel nhanGiaBan;
     private JTextField oNhapGiaBan;
 
@@ -87,18 +105,26 @@ public class AddProductDialog extends JDialog {
     private JLabel nhanTrangThai;
     private JComboBox<String> hopChonTrangThai;
 
-    private JLabel nhanMoTa;
-    private JTextArea vungNhapMoTa;
-    private JScrollPane thanhCuonMoTa;
     private JLabel nhanKhungCanhBao;
     private JButton nutHuyBo;
     private JButton nutLuuSanPham;
+    private Runnable sauKhiLuu;
+    private final SanPham_DAO sanPhamDAO = new SanPham_DAO();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
+    private final DecimalFormat dinhDangGia = taoDinhDangGia();
 
     private Point diemBamChuot;
 
     public AddProductDialog(Frame cuaSoCha) {
+        this(cuaSoCha, null);
+    }
+
+    public AddProductDialog(Frame cuaSoCha, Runnable sauKhiLuu) {
         super(cuaSoCha, true);
+        this.sauKhiLuu = sauKhiLuu;
         khoiTaoGiaoDien();
+        napLoaiDangHoatDong();
+        ganSuKienTinhGia();
     }
 
     private void khoiTaoGiaoDien() {
@@ -206,7 +232,7 @@ public class AddProductDialog extends JDialog {
         nhanMaSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanMaSanPham);
 
-        oNhapMaSanPham = taoONhapLieuBoGoc("SP241018006 (tự động)", false, false);
+        oNhapMaSanPham = taoONhapLieuBoGoc("Tự động", false, false);
         oNhapMaSanPham.setBounds(34, 162, 290, 40);
         theChuaModal.add(oNhapMaSanPham);
 
@@ -220,15 +246,25 @@ public class AddProductDialog extends JDialog {
         oNhapTenSanPham.setBounds(356, 162, 290, 40);
         theChuaModal.add(oNhapTenSanPham);
 
-        // 5. Hàng 2 (y=214): Loại sản phẩm (w=186), Đơn vị tính (w=186), Giá bán (w=186)
+        // 5. Hàng 2: Loại, đơn vị tính, số lượng tồn
         nhanLoaiSanPham = new JLabel("Loại sản phẩm");
         nhanLoaiSanPham.setBounds(34, 214, 186, 18);
         nhanLoaiSanPham.setFont(phongNhanTruong);
         nhanLoaiSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanLoaiSanPham);
 
-        String[] danhSachLoaiSP = {"Thức ăn", "Phụ kiện", "Vệ sinh", "Thuốc & bổ sung", "Đồ chơi"};
-        hopChonLoaiSanPham = new JComboBox<>(danhSachLoaiSP);
+        hopChonLoaiSanPham = new JComboBox<>();
+        hopChonLoaiSanPham.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> danhSach, Object giaTri, int chiSo,
+                    boolean dangChon, boolean coTieuDiem) {
+                super.getListCellRendererComponent(danhSach, giaTri, chiSo, dangChon, coTieuDiem);
+                if (giaTri instanceof LoaiSanPham loai) {
+                    setText(loai.getTenLoai());
+                }
+                return this;
+            }
+        });
         hopChonLoaiSanPham.setBounds(34, 236, 186, 40);
         hopChonLoaiSanPham.setFont(phongNhapLieu);
         hopChonLoaiSanPham.setBackground(mauNenOData);
@@ -245,87 +281,61 @@ public class AddProductDialog extends JDialog {
         oNhapDonViTinh.setBounds(247, 236, 186, 40);
         theChuaModal.add(oNhapDonViTinh);
 
-        nhanGiaBan = new JLabel("Giá bán (VNĐ)");
-        nhanGiaBan.setBounds(460, 214, 186, 18);
-        nhanGiaBan.setFont(phongNhanTruong);
-        nhanGiaBan.setForeground(mauChuTieuDe);
-        theChuaModal.add(nhanGiaBan);
-
-        oNhapGiaBan = taoONhapLieuBoGoc("Nhập giá bán", true, true);
-        oNhapGiaBan.setBounds(460, 236, 186, 40);
-        theChuaModal.add(oNhapGiaBan);
-
-        // 6. Hàng 3 (y=288): Số lượng tồn (w=186) & Trạng thái (w=186)
         nhanSoLuongTon = new JLabel("Số lượng tồn");
-        nhanSoLuongTon.setBounds(34, 288, 186, 18);
+        nhanSoLuongTon.setBounds(460, 214, 186, 18);
         nhanSoLuongTon.setFont(phongNhanTruong);
         nhanSoLuongTon.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanSoLuongTon);
 
         oNhapSoLuongTon = taoONhapLieuBoGoc("Nhập số lượng tồn", true, true);
-        oNhapSoLuongTon.setBounds(34, 310, 186, 40);
+        oNhapSoLuongTon.setBounds(460, 236, 186, 40);
         theChuaModal.add(oNhapSoLuongTon);
 
+        // 6. Hàng 3: giá nhập, tiền lời, giá bán chỉ đọc
+        nhanGiaNhap = new JLabel("Giá nhập (VNĐ)");
+        nhanGiaNhap.setBounds(34, 288, 186, 18);
+        nhanGiaNhap.setFont(phongNhanTruong);
+        nhanGiaNhap.setForeground(mauChuTieuDe);
+        theChuaModal.add(nhanGiaNhap);
+
+        oNhapGiaNhap = taoONhapLieuBoGoc("Nhập giá nhập", true, true);
+        oNhapGiaNhap.setBounds(34, 310, 186, 40);
+        theChuaModal.add(oNhapGiaNhap);
+
+        nhanTienLoi = new JLabel("Tiền lời (VNĐ)");
+        nhanTienLoi.setBounds(247, 288, 186, 18);
+        nhanTienLoi.setFont(phongNhanTruong);
+        nhanTienLoi.setForeground(mauChuTieuDe);
+        theChuaModal.add(nhanTienLoi);
+
+        oNhapTienLoi = taoONhapLieuBoGoc("0", true, true);
+        oNhapTienLoi.setBounds(247, 310, 186, 40);
+        theChuaModal.add(oNhapTienLoi);
+
+        nhanGiaBan = new JLabel("Giá bán (VNĐ)");
+        nhanGiaBan.setBounds(460, 288, 186, 18);
+        nhanGiaBan.setFont(phongNhanTruong);
+        nhanGiaBan.setForeground(mauChuTieuDe);
+        theChuaModal.add(nhanGiaBan);
+
+        oNhapGiaBan = taoONhapLieuBoGoc("", false, false);
+        oNhapGiaBan.setBounds(460, 310, 186, 40);
+        theChuaModal.add(oNhapGiaBan);
+
         nhanTrangThai = new JLabel("Trạng thái");
-        nhanTrangThai.setBounds(247, 288, 186, 18);
+        nhanTrangThai.setBounds(34, 362, 290, 18);
         nhanTrangThai.setFont(phongNhanTruong);
         nhanTrangThai.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanTrangThai);
 
         hopChonTrangThai = new JComboBox<>(new String[]{"Đang kinh doanh", "Ngừng kinh doanh"});
-        hopChonTrangThai.setBounds(247, 310, 186, 40);
+        hopChonTrangThai.setBounds(34, 384, 290, 40);
         hopChonTrangThai.setFont(phongNhapLieu);
         hopChonTrangThai.setBackground(mauNenOData);
         hopChonTrangThai.setFocusable(false);
         theChuaModal.add(hopChonTrangThai);
 
-        // 7. Hàng 4 (y=362): Mô tả (w=612, h=72)
-        nhanMoTa = new JLabel("Mô tả");
-        nhanMoTa.setBounds(34, 362, 612, 18);
-        nhanMoTa.setFont(phongNhanTruong);
-        nhanMoTa.setForeground(mauChuTieuDe);
-        theChuaModal.add(nhanMoTa);
-
-        vungNhapMoTa = new JTextArea() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (getText().isEmpty() && !isFocusOwner()) {
-                    Graphics2D gPlaceholder = (Graphics2D) g.create();
-                    gPlaceholder.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-                    gPlaceholder.setColor(mauChuPlaceholder);
-                    gPlaceholder.setFont(phongNhapLieu);
-                    Insets insets = getInsets();
-                    FontMetrics fm = gPlaceholder.getFontMetrics();
-                    gPlaceholder.drawString("Nhập mô tả sản phẩm", insets.left, insets.top + fm.getAscent());
-                    gPlaceholder.dispose();
-                }
-            }
-        };
-        vungNhapMoTa.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent suKien) {
-                vungNhapMoTa.repaint();
-            }
-            @Override
-            public void focusLost(FocusEvent suKien) {
-                vungNhapMoTa.repaint();
-            }
-        });
-        vungNhapMoTa.setFont(phongNhapLieu);
-        vungNhapMoTa.setForeground(mauChuTieuDe);
-        vungNhapMoTa.setBackground(mauNenOData);
-        vungNhapMoTa.setLineWrap(true);
-        vungNhapMoTa.setWrapStyleWord(true);
-        vungNhapMoTa.setBorder(new EmptyBorder(8, 12, 8, 12));
-
-        thanhCuonMoTa = new JScrollPane(vungNhapMoTa);
-        thanhCuonMoTa.setBounds(34, 384, 612, 72);
-        thanhCuonMoTa.setBorder(BorderFactory.createLineBorder(mauVienHop, 1, true));
-        theChuaModal.add(thanhCuonMoTa);
-
-        // 8. Hàng 5 (y=470): Khung cảnh báo nghiệp vụ
-        nhanKhungCanhBao = new JLabel("<html>• Giá bán và số lượng tồn không được âm. Hệ thống hỗ trợ cập nhật trạng thái kinh doanh của sản phẩm.</html>") {
+        nhanKhungCanhBao = new JLabel("<html>• Giá bán = giá nhập + tiền lời, không nhập trực tiếp. Giá nhập phải lớn hơn 0, tiền lời và số lượng tồn không âm.</html>") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -387,6 +397,7 @@ public class AddProductDialog extends JDialog {
         nutLuuSanPham.setContentAreaFilled(false);
         nutLuuSanPham.setBorderPainted(false);
         nutLuuSanPham.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nutLuuSanPham.addActionListener(suKien -> luuSanPham());
         theChuaModal.add(nutLuuSanPham);
 
         // Đóng modal bằng phím ESC
@@ -447,5 +458,143 @@ public class AddProductDialog extends JDialog {
         ));
         oNhap.setEditable(choPhepNhap);
         return oNhap;
+    }
+
+    private void napLoaiDangHoatDong() {
+        hopChonLoaiSanPham.removeAllItems();
+        ArrayList<LoaiSanPham> danhSach = loaiSanPhamDAO.getLoaiSanPhamDangHoatDong();
+        if (danhSach == null || danhSach.isEmpty()) {
+            nutLuuSanPham.setEnabled(false);
+            JOptionPane.showMessageDialog(this, "Không có loại sản phẩm đang hoạt động để thêm sản phẩm.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        for (LoaiSanPham loai : danhSach) {
+            hopChonLoaiSanPham.addItem(loai);
+        }
+    }
+
+    private void ganSuKienTinhGia() {
+        DocumentListener theoDoi = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent suKien) {
+                capNhatGiaBan();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent suKien) {
+                capNhatGiaBan();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent suKien) {
+                capNhatGiaBan();
+            }
+        };
+        oNhapGiaNhap.getDocument().addDocumentListener(theoDoi);
+        oNhapTienLoi.getDocument().addDocumentListener(theoDoi);
+        capNhatGiaBan();
+    }
+
+    private void capNhatGiaBan() {
+        BigDecimal giaNhap = docSoTien(oNhapGiaNhap.getText(), false);
+        BigDecimal tienLoi = docSoTien(oNhapTienLoi.getText(), true);
+        if (giaNhap == null || tienLoi == null) {
+            oNhapGiaBan.setText("");
+            return;
+        }
+        oNhapGiaBan.setText(dinhDangGia.format(giaNhap.add(tienLoi)));
+    }
+
+    private void luuSanPham() {
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            JOptionPane.showMessageDialog(this,
+                    "Chỉ chủ cửa hàng được thêm, cập nhật hoặc đổi trạng thái sản phẩm.",
+                    "Không có quyền", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String ten = oNhapTenSanPham.getText().trim();
+        String donVi = oNhapDonViTinh.getText().trim();
+        if (ten.isEmpty() || donVi.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Tên sản phẩm và đơn vị tính không được để trống.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        BigDecimal giaNhap = docSoTien(oNhapGiaNhap.getText(), false);
+        BigDecimal tienLoi = docSoTien(oNhapTienLoi.getText(), true);
+        Integer soLuong = docSoNguyen(oNhapSoLuongTon.getText());
+        if (giaNhap == null || tienLoi == null || soLuong == null) {
+            JOptionPane.showMessageDialog(this, "Giá nhập, tiền lời và số lượng tồn phải là số hợp lệ.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        LoaiSanPham loai = (LoaiSanPham) hopChonLoaiSanPham.getSelectedItem();
+        if (loai == null || !loai.isTrangThai()) {
+            JOptionPane.showMessageDialog(this, "Chỉ được thêm sản phẩm vào loại đang hoạt động.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        SanPham sanPham = new SanPham();
+        try {
+            sanPham.setTenSP(ten);
+            sanPham.setDonViTinh(donVi);
+            sanPham.setGiaNhap(giaNhap);
+            sanPham.setTienLoi(tienLoi);
+            sanPham.setSoLuongTon(soLuong);
+            sanPham.setTrangThai(hopChonTrangThai.getSelectedIndex() == 0);
+            sanPham.setLoaiSanPham(loai);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        LoaiSanPham loaiTrongCsdl = loaiSanPhamDAO.getLoaiSanPhamTheoMa(loai.getMaLoaiSanPham());
+        if (loaiTrongCsdl == null || !loaiTrongCsdl.isTrangThai()) {
+            JOptionPane.showMessageDialog(this, "Chỉ được thêm sản phẩm vào loại đang hoạt động.",
+                    "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String loi = sanPhamDAO.themSanPham(sanPham);
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không lưu được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this,
+                "Đã thêm sản phẩm " + sanPham.getMaSP() + ". Giá bán: " + dinhDangGia.format(sanPham.getGiaBan()) + ".",
+                "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        dispose();
+        if (sauKhiLuu != null) {
+            sauKhiLuu.run();
+        }
+    }
+
+    private BigDecimal docSoTien(String chuoi, boolean choPhepKhong) {
+        if (chuoi == null || chuoi.trim().isEmpty()) {
+            return choPhepKhong ? BigDecimal.ZERO : null;
+        }
+        String so = chuoi.trim().replace(" ", "");
+        if (so.matches("\\d{1,3}(\\.\\d{3})+(,\\d+)?")) {
+            so = so.replace(".", "").replace(",", ".");
+        } else {
+            so = so.replace(",", ".");
+        }
+        try {
+            return new BigDecimal(so);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private Integer docSoNguyen(String chuoi) {
+        if (chuoi == null || chuoi.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.valueOf(chuoi.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static DecimalFormat taoDinhDangGia() {
+        DecimalFormatSymbols kyHieu = DecimalFormatSymbols.getInstance(new Locale("vi", "VN"));
+        return new DecimalFormat("#,##0.##", kyHieu);
     }
 }

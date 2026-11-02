@@ -1,6 +1,17 @@
 package view;
 
+import app.UserSession;
+import dao.LoaiSanPham_DAO;
+import dao.SanPham_DAO;
+import entity.LoaiSanPham;
+import entity.SanPham;
 import java.awt.BorderLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Locale;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -20,9 +31,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -30,6 +44,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -76,6 +92,7 @@ public class ProductManagementPanel extends JPanel {
     private JPanel khungThanhCongCu;
     private JPanel khungBoLocBenTrai;
     private JTextField oNhapTimKiem;
+    private JComboBox<LoaiSanPham> hopChonLoai;
     private JComboBox<String> hopChonTrangThai;
     private JComboBox<String> hopChonSapXep;
     private JButton nutThemSanPham;
@@ -85,10 +102,14 @@ public class ProductManagementPanel extends JPanel {
     private JPanel khungPhanTrang;
     private JLabel nhanThongKePhanTrang;
     private JPanel khungCacNutChuyenTrang;
-    private JButton nutTrangTruoc;
-    private JButton nutTrangSoMot;
-    private JButton nutTrangSoHai;
-    private JButton nutTrangKeTiep;
+    private final SanPham_DAO sanPhamDAO = new SanPham_DAO();
+    private final LoaiSanPham_DAO loaiSanPhamDAO = new LoaiSanPham_DAO();
+    private final DecimalFormat dinhDangGia = taoDinhDangGia();
+    private final ArrayList<SanPham> danhSachLoc = new ArrayList<>();
+    private final ArrayList<SanPham> danhSachTrang = new ArrayList<>();
+    private static final int SO_DONG_MOI_TRANG = 5;
+    private int trangHienTai = 1;
+    private boolean dangNapBoLoc = false;
 
     public ProductManagementPanel() {
         khoiTaoGiaoDien();
@@ -174,6 +195,22 @@ public class ProductManagementPanel extends JPanel {
             new EmptyBorder(0, 10, 0, 10)
         ));
 
+        hopChonLoai = new JComboBox<>();
+        hopChonLoai.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> danhSach, Object giaTri, int chiSo,
+                    boolean dangChon, boolean coTieuDiem) {
+                super.getListCellRendererComponent(danhSach, giaTri, chiSo, dangChon, coTieuDiem);
+                setText(giaTri instanceof LoaiSanPham loai ? loai.getTenLoai() : "Tất cả loại");
+                return this;
+            }
+        });
+        hopChonLoai.setPreferredSize(new Dimension(160, 38));
+        hopChonLoai.setFont(phongChuMoTa);
+        hopChonLoai.setForeground(mauChuBoLoc);
+        hopChonLoai.setBackground(mauNenOData);
+        hopChonLoai.setFocusable(false);
+
         // Hộp chọn trạng thái
         String[] danhSachTrangThai = {"Trạng thái", "Đang kinh doanh", "Ngừng kinh doanh"};
         hopChonTrangThai = new JComboBox<>(danhSachTrangThai);
@@ -193,8 +230,27 @@ public class ProductManagementPanel extends JPanel {
         hopChonSapXep.setFocusable(false);
 
         khungBoLocBenTrai.add(oNhapTimKiem);
+        khungBoLocBenTrai.add(hopChonLoai);
         khungBoLocBenTrai.add(hopChonTrangThai);
         khungBoLocBenTrai.add(hopChonSapXep);
+
+        oNhapTimKiem.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent suKien) {
+                locLaiTuDau();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent suKien) {
+                locLaiTuDau();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent suKien) {
+                locLaiTuDau();
+            }
+        });
+        hopChonLoai.addActionListener(suKien -> locLaiTuDau());
+        hopChonTrangThai.addActionListener(suKien -> locLaiTuDau());
+        hopChonSapXep.addActionListener(suKien -> locLaiTuDau());
 
         // Nút thêm mới sản phẩm bên phải
         nutThemSanPham = new JButton("+ Thêm") {
@@ -216,11 +272,17 @@ public class ProductManagementPanel extends JPanel {
         nutThemSanPham.setBorderPainted(false);
         nutThemSanPham.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Mở popup Thêm sản phẩm
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            nutThemSanPham.setVisible(false);
+        }
         nutThemSanPham.addActionListener(suKien -> {
+            if (!UserSession.getInstance().laChuCuaHang()) {
+                JOptionPane.showMessageDialog(this, "Chỉ chủ cửa hàng được thêm sản phẩm.",
+                        "Không có quyền", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             Frame cuaSoCha = (Frame) SwingUtilities.getWindowAncestor(this);
-            AddProductDialog hopThoaiThem = new AddProductDialog(cuaSoCha);
-            hopThoaiThem.setVisible(true);
+            new AddProductDialog(cuaSoCha, this::napDuLieuTuCoSoDuLieu).setVisible(true);
         });
 
         khungThanhCongCu.add(khungBoLocBenTrai, BorderLayout.WEST);
@@ -236,15 +298,8 @@ public class ProductManagementPanel extends JPanel {
 
         // ===== 3. Bảng dữ liệu sản phẩm =====
         String[] tieuDeCacCot = {"Mã SP", "Tên sản phẩm", "Loại SP", "Đơn vị tính", "Giá bán", "SL tồn", "Trạng thái", "Thao tác"};
-        Object[][] duLieuMauTuFigma = {
-            {"SP241018001", "Royal Canin Mini Adult", "Thức ăn", "Gói", "185.000", "24", "Đang kinh doanh", "Sửa"},
-            {"SP241018002", "Vòng cổ phản quang", "Phụ kiện", "Cái", "95.000", "15", "Đang kinh doanh", "Sửa"},
-            {"SP241018003", "Cát vệ sinh hương trà xa…", "Vệ sinh", "Túi", "72.000", "30", "Đang kinh doanh", "Sửa"},
-            {"SP241018004", "Vitamin tổng hợp cho chó", "Thuốc & bổ sung", "Hộp", "128.000", "8", "Ngừng kinh doanh", "Sửa"},
-            {"SP241018005", "Đồ chơi gặm xương cao su", "Đồ chơi", "Cái", "59.000", "18", "Đang kinh doanh", "Sửa"}
-        };
 
-        moHinhBang = new DefaultTableModel(duLieuMauTuFigma, tieuDeCacCot) {
+        moHinhBang = new DefaultTableModel(tieuDeCacCot, 0) {
             @Override
             public boolean isCellEditable(int hang, int cot) {
                 return false;
@@ -310,14 +365,24 @@ public class ProductManagementPanel extends JPanel {
         bangSanPham.getColumnModel().getColumn(7).setCellRenderer(new BoKetXuatThaoTac());
 
         // Bắt sự kiện click vào cột "Thao tác" (cột 7)
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            bangSanPham.removeColumn(bangSanPham.getColumnModel().getColumn(7));
+        }
         bangSanPham.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent suKien) {
                 int cotDuocChon = bangSanPham.columnAtPoint(suKien.getPoint());
-                if (cotDuocChon == 7) {
+                int hang = bangSanPham.rowAtPoint(suKien.getPoint());
+                if (cotDuocChon == 7 && hang >= 0 && hang < danhSachTrang.size()) {
+                    if (!UserSession.getInstance().laChuCuaHang()) {
+                        JOptionPane.showMessageDialog(ProductManagementPanel.this,
+                                "Chỉ chủ cửa hàng được cập nhật sản phẩm.",
+                                "Không có quyền", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     Frame cuaSoCha = (Frame) SwingUtilities.getWindowAncestor(ProductManagementPanel.this);
-                    UpdateProductDialog hopThoaiCapNhat = new UpdateProductDialog(cuaSoCha);
-                    hopThoaiCapNhat.setVisible(true);
+                    new UpdateProductDialog(cuaSoCha, danhSachTrang.get(hang), ProductManagementPanel.this::napDuLieuTuCoSoDuLieu)
+                            .setVisible(true);
                 }
             }
         });
@@ -332,22 +397,12 @@ public class ProductManagementPanel extends JPanel {
         khungPhanTrang.setOpaque(false);
         khungPhanTrang.setBorder(new EmptyBorder(16, 0, 0, 0));
 
-        nhanThongKePhanTrang = new JLabel("Hiển thị 1–5 / 25");
+        nhanThongKePhanTrang = new JLabel("Hiển thị 0 / 0");
         nhanThongKePhanTrang.setFont(phongChuMoTa);
         nhanThongKePhanTrang.setForeground(mauChuPhu);
 
         khungCacNutChuyenTrang = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         khungCacNutChuyenTrang.setOpaque(false);
-
-        nutTrangTruoc = taoNutChuyenTrang("<", false);
-        nutTrangSoMot = taoNutChuyenTrang("1", true);
-        nutTrangSoHai = taoNutChuyenTrang("2", false);
-        nutTrangKeTiep = taoNutChuyenTrang(">", false);
-
-        khungCacNutChuyenTrang.add(nutTrangTruoc);
-        khungCacNutChuyenTrang.add(nutTrangSoMot);
-        khungCacNutChuyenTrang.add(nutTrangSoHai);
-        khungCacNutChuyenTrang.add(nutTrangKeTiep);
 
         khungPhanTrang.add(nhanThongKePhanTrang, BorderLayout.WEST);
         khungPhanTrang.add(khungCacNutChuyenTrang, BorderLayout.EAST);
@@ -355,9 +410,140 @@ public class ProductManagementPanel extends JPanel {
         theChuaDanhSach.add(khungPhanTrang, BorderLayout.SOUTH);
 
         add(theChuaDanhSach, BorderLayout.CENTER);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent suKien) {
+                napBoLocLoai();
+                napDuLieuTuCoSoDuLieu();
+            }
+        });
+        napBoLocLoai();
+        napDuLieuTuCoSoDuLieu();
     }
 
-    private JButton taoNutChuyenTrang(String kyTu, boolean dangKichHoat) {
+    private void locLaiTuDau() {
+        if (dangNapBoLoc) {
+            return;
+        }
+        trangHienTai = 1;
+        napDuLieuTuCoSoDuLieu();
+    }
+
+    private void napBoLocLoai() {
+        dangNapBoLoc = true;
+        String maDangChon = hopChonLoai.getSelectedItem() instanceof LoaiSanPham loai ? loai.getMaLoaiSanPham() : null;
+        hopChonLoai.removeAllItems();
+        hopChonLoai.addItem(null);
+        ArrayList<LoaiSanPham> danhSach = loaiSanPhamDAO.getAllLoaiSanPham();
+        if (danhSach != null) {
+            for (LoaiSanPham loai : danhSach) {
+                hopChonLoai.addItem(loai);
+            }
+        }
+        hopChonLoai.setSelectedIndex(0);
+        if (maDangChon != null) {
+            for (int i = 0; i < hopChonLoai.getItemCount(); i++) {
+                LoaiSanPham loai = hopChonLoai.getItemAt(i);
+                if (loai != null && maDangChon.equals(loai.getMaLoaiSanPham())) {
+                    hopChonLoai.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+        dangNapBoLoc = false;
+    }
+
+    private static DecimalFormat taoDinhDangGia() {
+        DecimalFormatSymbols kyHieu = DecimalFormatSymbols.getInstance(new Locale("vi", "VN"));
+        return new DecimalFormat("#,##0.##", kyHieu);
+    }
+
+    private void napDuLieuTuCoSoDuLieu() {
+        Boolean trangThai = null;
+        if (hopChonTrangThai.getSelectedIndex() == 1) {
+            trangThai = Boolean.TRUE;
+        } else if (hopChonTrangThai.getSelectedIndex() == 2) {
+            trangThai = Boolean.FALSE;
+        }
+        String maLoai = hopChonLoai.getSelectedItem() instanceof LoaiSanPham loai ? loai.getMaLoaiSanPham() : null;
+        ArrayList<SanPham> ketQua = sanPhamDAO.locDanhSachQuanLy(
+                oNhapTimKiem.getText(), maLoai, trangThai, kieuSapXepDangChon());
+        danhSachLoc.clear();
+        if (ketQua == null) {
+            moHinhBang.setRowCount(0);
+            danhSachTrang.clear();
+            nhanThongKePhanTrang.setText("Không tải được dữ liệu từ cơ sở dữ liệu.");
+            veNutPhanTrang(0);
+            return;
+        }
+        danhSachLoc.addAll(ketQua);
+        int tongTrang = Math.max(1, (int) Math.ceil(danhSachLoc.size() / (double) SO_DONG_MOI_TRANG));
+        if (trangHienTai > tongTrang) {
+            trangHienTai = tongTrang;
+        }
+        hienThiTrang();
+    }
+
+    private void hienThiTrang() {
+        moHinhBang.setRowCount(0);
+        danhSachTrang.clear();
+        int tong = danhSachLoc.size();
+        if (tong == 0) {
+            nhanThongKePhanTrang.setText("Không có dữ liệu phù hợp.");
+            veNutPhanTrang(0);
+            return;
+        }
+        int batDau = (trangHienTai - 1) * SO_DONG_MOI_TRANG;
+        int ketThuc = Math.min(batDau + SO_DONG_MOI_TRANG, tong);
+        for (int i = batDau; i < ketThuc; i++) {
+            SanPham sp = danhSachLoc.get(i);
+            danhSachTrang.add(sp);
+            LoaiSanPham loai = sp.getLoaiSanPham();
+            String tenLoai = (loai == null || loai.getTenLoai() == null) ? "" : loai.getTenLoai();
+            moHinhBang.addRow(new Object[] {
+                sp.getMaSP(),
+                sp.getTenSP(),
+                tenLoai,
+                sp.getDonViTinh(),
+                sp.getGiaBan() == null ? "" : dinhDangGia.format(sp.getGiaBan()),
+                sp.getSoLuongTon(),
+                sp.isTrangThai() ? "Đang kinh doanh" : "Ngừng kinh doanh",
+                "Sửa"
+            });
+        }
+        nhanThongKePhanTrang.setText("Hiển thị " + (batDau + 1) + "–" + ketThuc + " / " + tong);
+        veNutPhanTrang(tong);
+    }
+
+    private void veNutPhanTrang(int tongDong) {
+        khungCacNutChuyenTrang.removeAll();
+        int tongTrang = tongDong == 0 ? 1 : (int) Math.ceil(tongDong / (double) SO_DONG_MOI_TRANG);
+        khungCacNutChuyenTrang.add(taoNutChuyenTrang("<", false,
+                trangHienTai > 1 ? () -> { trangHienTai--; hienThiTrang(); } : null));
+        for (int i = 1; i <= tongTrang; i++) {
+            int trang = i;
+            khungCacNutChuyenTrang.add(taoNutChuyenTrang(String.valueOf(trang), trang == trangHienTai,
+                    () -> { trangHienTai = trang; hienThiTrang(); }));
+        }
+        khungCacNutChuyenTrang.add(taoNutChuyenTrang(">", false,
+                trangHienTai < tongTrang && tongDong > 0 ? () -> { trangHienTai++; hienThiTrang(); } : null));
+        khungCacNutChuyenTrang.revalidate();
+        khungCacNutChuyenTrang.repaint();
+    }
+
+    private String kieuSapXepDangChon() {
+        return switch (hopChonSapXep.getSelectedIndex()) {
+            case 1 -> "CU_NHAT";
+            case 2 -> "TEN_AZ";
+            case 3 -> "TEN_ZA";
+            case 4 -> "GIA_TANG";
+            case 5 -> "GIA_GIAM";
+            default -> "MOI_NHAT";
+        };
+    }
+
+    private JButton taoNutChuyenTrang(String kyTu, boolean dangKichHoat, Runnable hanhDong) {
         JButton nut = new JButton(kyTu) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -382,8 +568,12 @@ public class ProductManagementPanel extends JPanel {
         nut.setFocusPainted(false);
         nut.setContentAreaFilled(false);
         nut.setBorderPainted(false);
-        nut.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nut.setCursor(new Cursor(hanhDong == null ? Cursor.DEFAULT_CURSOR : Cursor.HAND_CURSOR));
         nut.setMargin(new Insets(0, 0, 0, 0));
+        nut.setEnabled(hanhDong != null);
+        if (hanhDong != null) {
+            nut.addActionListener(suKien -> hanhDong.run());
+        }
         return nut;
     }
 
