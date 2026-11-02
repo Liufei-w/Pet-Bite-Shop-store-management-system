@@ -49,6 +49,12 @@ public class UserSession {
         return "Nhân viên";
     }
 
+    /** Chủ cửa hàng được thêm, sửa và đổi trạng thái sản phẩm, loại sản phẩm. */
+    public boolean laChuCuaHang() {
+        String vaiTro = getVaiTro();
+        return vaiTro != null && "Chủ cửa hàng".equalsIgnoreCase(vaiTro.trim());
+    }
+
     public boolean isLoggedIn() {
         return taiKhoanHienTai != null;
     }
