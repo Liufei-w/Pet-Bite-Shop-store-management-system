@@ -706,6 +706,29 @@ public class BanHangPanel extends JPanel implements ActionListener {
                 return;
             }
 
+            // Kiểm tra tiền khách đưa nếu chọn Tiền mặt
+            if (rbTienMat.isSelected()) {
+                String sTienDua = txtTienKhachDua.getText().trim();
+                if (sTienDua.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền khách đưa!");
+                    txtTienKhachDua.requestFocus();
+                    return;
+                }
+                try {
+                    BigDecimal tienDua = new BigDecimal(sTienDua);
+                    BigDecimal tongTien = layTongTienTam();
+                    if (tienDua.compareTo(tongTien) < 0) {
+                        JOptionPane.showMessageDialog(this, "Số tiền khách đưa không đủ để thanh toán!");
+                        txtTienKhachDua.requestFocus();
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Số tiền khách đưa không hợp lệ!");
+                    txtTienKhachDua.requestFocus();
+                    return;
+                }
+            }
+
             try {
                 String yyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd"));
                 int stt = hd_dao.demSoLuongHoaDonTrongNgay(yyMMdd) + 1;
@@ -720,12 +743,24 @@ public class BanHangPanel extends JPanel implements ActionListener {
                 HoaDon hd = new HoaDon();
                 hd.setMaHD(maHD);
                 hd.setNgayLap(ngayLap);
+                hd.setTrangThai("Đã thanh toán"); // Đảm bảo trạng thái hóa đơn
                 hd.setPhuongThucTT(ptTT);
                 hd.setKhachHang(khachHangHienTai);
                 hd.setNhanVien(nv);
 
-                ArrayList<Object[]> dsChiTietSP = new ArrayList<Object[]>();
-                ArrayList<Object[]> dsChiTietDV = new ArrayList<Object[]>();
+                // Nếu là tiền mặt, gán thêm tiền khách đưa và tiền thừa
+                if (rbTienMat.isSelected()) {
+                    BigDecimal tienDua = new BigDecimal(txtTienKhachDua.getText().trim());
+                    hd.setTienKhachDua(tienDua);
+                    hd.setTienThua(tienDua.subtract(layTongTienTam()));
+                }
+
+                // Gán tổng tiền thanh toán (đã gồm VAT) vào đối tượng HoaDon để DAO tính tiền hàng chưa VAT
+                hd.setTongTien(layTongTienTam());
+
+                // Thu thập danh sách chi tiết sản phẩm từ bảng tạm
+                ArrayList<Object[]> dsChiTietSP = new ArrayList<>();
+                ArrayList<Object[]> dsChiTietDV = new ArrayList<>(); // Tạm thời để trống, lát nữa chúng ta sẽ tích hợp phần Dịch vụ sau
 
                 for (int i = 0; i < modelHoaDonTam.getRowCount(); i++) {
                     String loai = modelHoaDonTam.getValueAt(i, 0).toString();
@@ -735,51 +770,32 @@ public class BanHangPanel extends JPanel implements ActionListener {
                     BigDecimal donGia = new BigDecimal(modelHoaDonTam.getValueAt(i, 3).toString());
 
                     if (loai.equals("SP")) {
-                        SanPham sp = sp_dao.getSanPhamTheoMa(maSP);
-                        ChiTietHoaDon_SanPham ctsp = new ChiTietHoaDon_SanPham(sp, soLuong, donGia);
-                        hd.themChiTietSanPham(ctsp);
-
-                        Object[] ct = {maSP, soLuong, donGia};
-                        dsChiTietSP.add(ct);
+                        Object[] ctsp = {maSP, soLuong, donGia};
+                        dsChiTietSP.add(ctsp);
                     }
                 }
 
-                if (rbTienMat.isSelected()) {
-                    String sTienDua = txtTienKhachDua.getText().trim();
-                    if (sTienDua.isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền khách đưa!");
-                        txtTienKhachDua.requestFocus();
-                        return;
-                    }
-                    hd.setTienKhachDua(new BigDecimal(sTienDua));
-                } else {
-                    hd.setTienKhachDua(null);
-                }
+                // Gọi DAO thực hiện Transaction lưu hóa đơn, trừ tồn kho
+                boolean kq = hd_dao.themHoaDon(hd, dsChiTietSP, dsChiTietDV);
 
-                hd.capNhatTongTien();
-                hd.setTienThua(hd.tinhTienThua());
-                hd.kiemTraThanhToan();
-
-                boolean ketQua = hd_dao.themHoaDon(hd, dsChiTietSP, dsChiTietDV);
-
-                if (ketQua) {
-                    JOptionPane.showMessageDialog(this, "Thanh toán thành công!\nMã hóa đơn: " + maHD + "\nTổng thanh toán (gồm VAT): " + hd.getTongTien() + " đ\nĐã cập nhật giảm tồn kho.");
+                if (kq) {
+                    JOptionPane.showMessageDialog(this, "Thanh toán thành công!\nMã hóa đơn: " + maHD);
                     
+                    // Reset lại form bán hàng cho giao dịch tiếp theo
                     modelHoaDonTam.setRowCount(0);
+                    khachHangHienTai = null;
+                    txtSearchKH.setText("");
                     txtSearchSP.setText("");
                     txtTienKhachDua.setText("");
-                    lblTienHang.setText("Tiền hàng (chưa VAT): 0 đ");
-                    lblTienThue.setText("Thuế VAT (10%): 0 đ");
-                    lblTongTien.setText("<html><b>TỔNG THANH TOÁN: <font color='red' size='5'>0 đ</font></b></html>");
-                    lblTienThua.setText("Tiền thừa: 0 đ");
-                    khachHangHienTai = null;
                     lblInfoKH.setText("<html><b><font size='3'>Chưa chọn khách hàng nào!</font></b><br/><font color='#7A8CA0' size='3'>Vui lòng nhập số điện thoại để tìm kiếm hoặc thêm mới.</font></html>");
+                    tinhToanTienHoaDon();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Thanh toán thất bại! Lỗi khi ghi dữ liệu xuống cơ sở dữ liệu.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Thanh toán thất bại! Lỗi lưu cơ sở dữ liệu.");
                 }
 
-            } catch (IllegalArgumentException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi ràng buộc nghiệp vụ", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Đã xảy ra lỗi trong quá trình thanh toán: " + ex.getMessage());
             }
         }
     }
