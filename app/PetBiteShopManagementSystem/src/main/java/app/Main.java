@@ -1,7 +1,7 @@
 package app;
 
 import javax.swing.SwingUtilities; 
-import view.MainFrame;
+import view.LoginFrame;
 
 public class Main {
     public static void main(String[] args) {
@@ -11,8 +11,8 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            MainFrame frame = new MainFrame();
-            frame.setVisible(true);
+            LoginFrame loginFrame = new LoginFrame();
+            loginFrame.setVisible(true);
         });
     }
 }
