@@ -17,7 +17,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         setTitle("PET BITE SHOP - Quản lý cửa hàng thú cưng");
-        setSize(1250, 790);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -44,8 +44,6 @@ public class MainFrame extends JFrame {
         contentPanel.add(new InvoiceManagementPanel(), "INVOICES");
         contentPanel.add(new PlaceholderPanel("PHIẾU TRẢ HÀNG & HOÀN TIỀN"), "RETURNS");
         contentPanel.add(new EmployeeManagementPanel(), "EMPLOYEES");
-
-
         contentPanel.add(new PlaceholderPanel("THỐNG KÊ DOANH THU"), "STAT_REVENUE");
         contentPanel.add(new PlaceholderPanel("THỐNG KÊ SỐ LƯỢNG SẢN PHẨM"), "STAT_PRODUCTS");
         contentPanel.add(new PlaceholderPanel("THỐNG KÊ LƯỢT DỊCH VỤ"), "STAT_SERVICES");

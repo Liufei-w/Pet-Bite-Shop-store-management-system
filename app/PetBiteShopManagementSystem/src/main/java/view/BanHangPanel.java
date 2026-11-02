@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,7 +34,8 @@ public class BanHangPanel extends JPanel implements ActionListener {
     private JRadioButton rbTienMat, rbChuyenKhoan;
     private JTable tableHoaDonTam;
     private DefaultTableModel modelHoaDonTam;
-    private JLabel lblTongTien, lblTienThua, lblInfoKH;
+    
+    private JLabel lblTienHang, lblTienThue, lblTongTien, lblTienThua, lblInfoKH;
     private JPanel panelTienMatInput;
 
     private KhachHang_DAO kh_dao;
@@ -54,7 +56,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
 
         setLayout(new BorderLayout(15, 15));
         setBackground(new Color(244, 246, 249));
-        setBorder(new EmptyBorder(20, 20, 20, 20));
+        setBorder(new EmptyBorder(15, 15, 15, 15));
 
         // ===== 1. TIÊU ĐỀ PHÍA TRÊN =====
         JPanel panelTop = new JPanel();
@@ -65,7 +67,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
         lblTitle.setFont(new Font("SansSerif", Font.BOLD, 22));
         lblTitle.setForeground(new Color(18, 57, 88));
 
-        JLabel lblSub = new JLabel("Lập hóa đơn tạm, tự động nạp dịch vụ chưa thanh toán và xử lý thanh toán chính xác.");
+        JLabel lblSub = new JLabel("Lập hóa đơn tạm, tự động tính toán thuế VAT 10% và xử lý thanh toán chính xác.");
         lblSub.setFont(new Font("SansSerif", Font.PLAIN, 13));
         lblSub.setForeground(new Color(122, 140, 160));
 
@@ -74,88 +76,99 @@ public class BanHangPanel extends JPanel implements ActionListener {
         panelTop.add(lblSub);
         add(panelTop, BorderLayout.NORTH);
 
-        // ===== 2. KHU VỰC TRUNG TÂM =====
+        // ===== 2. KHU VỰC TRUNG TÂM (Chia 2 cột) =====
         JPanel panelCenter = new JPanel(new GridLayout(1, 2, 15, 0));
         panelCenter.setOpaque(false);
 
         // --- CỘT TRÁI ---
-        JPanel panelLeft = new JPanel();
-        panelLeft.setLayout(new BoxLayout(panelLeft, BoxLayout.Y_AXIS));
-        panelLeft.setOpaque(false);
+        Box boxLeft = Box.createVerticalBox();
+        boxLeft.setOpaque(false);
 
         // Card 1: Khách hàng
         JPanel cardKH = createCardPanel("1. Chọn khách hàng (Nhập SĐT rồi nhấn Enter)");
-        txtSearchKH = new JTextField(16);
+        txtSearchKH = new JTextField();
+        txtSearchKH.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        txtSearchKH.setPreferredSize(new Dimension(210, 40));
         txtSearchKH.setToolTipText("Nhập số điện thoại khách hàng");
-        btnThemKH = createOrangeButton("+ Thêm KH mới");
         
-        JPanel pKHInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        btnThemKH = createLargeOrangeButton("+ Thêm KH mới");
+        
+        JPanel pKHInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
         pKHInput.setOpaque(false);
         pKHInput.add(txtSearchKH);
+        pKHInput.add(Box.createHorizontalStrut(8));
         pKHInput.add(btnThemKH);
         cardKH.add(pKHInput);
 
-        lblInfoKH = new JLabel("<html><b>Chưa chọn khách hàng nào!</b><br/><font color='#7A8CA0'>Vui lòng nhập số điện thoại để tìm kiếm hoặc thêm mới.</font></html>");
-        lblInfoKH.setBorder(new EmptyBorder(5, 10, 5, 10));
+        lblInfoKH = new JLabel("<html><b><font size='3'>Chưa chọn khách hàng nào!</font></b><br/><font color='#7A8CA0' size='3'>Vui lòng nhập số điện thoại để tìm kiếm hoặc thêm mới.</font></html>");
+        lblInfoKH.setBorder(new EmptyBorder(8, 0, 8, 0));
         cardKH.add(lblInfoKH);
 
-        panelLeft.add(cardKH);
-        panelLeft.add(Box.createVerticalStrut(15));
+        boxLeft.add(cardKH);
+        boxLeft.add(Box.createVerticalStrut(15));
 
         // Card 2: Sản phẩm
         JPanel cardSP = createCardPanel("2. Thêm sản phẩm (Nhập Mã/Tên hoặc bấm Xem DS)");
-        txtSearchSP = new JTextField(12);
+        txtSearchSP = new JTextField();
+        txtSearchSP.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        txtSearchSP.setPreferredSize(new Dimension(170, 40));
         txtSearchSP.setToolTipText("Nhập mã hoặc tên sản phẩm");
-        btnThemSP = createOrangeButton("+ Thêm SP");
+        
+        btnThemSP = createLargeOrangeButton("+ Thêm SP");
+        
         btnXemDS = new JButton("Xem DS");
-        btnXemDS.setFont(new Font("SansSerif", Font.BOLD, 11));
+        btnXemDS.setFont(new Font("SansSerif", Font.BOLD, 13));
+        btnXemDS.setMargin(new Insets(8, 14, 8, 14));
         btnXemDS.setFocusPainted(false);
+        btnXemDS.setBackground(new Color(230, 235, 245));
 
-        JPanel pSPInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        JPanel pSPInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
         pSPInput.setOpaque(false);
         pSPInput.add(txtSearchSP);
+        pSPInput.add(Box.createHorizontalStrut(5));
         pSPInput.add(btnThemSP);
+        pSPInput.add(Box.createHorizontalStrut(5));
         pSPInput.add(btnXemDS);
         cardSP.add(pSPInput);
 
         JTextArea txtGoiY = new JTextArea(
-            "Hướng dẫn nhanh:\n" +
-            "• Nhập SĐT khách hàng nhấn Enter để tra cứu hoặc thêm mới.\n" +
-            "• Nhập Mã SP hoặc Tên SP (VD: Pate Whiskas, Hạt Royal) rồi Enter để chọn."
+            " Hướng dẫn nhanh:\n" +
+            " • Nhập SĐT khách hàng nhấn Enter để tra cứu hoặc thêm mới.\n" +
+            " • Nhập Mã SP hoặc Tên SP rồi nhấn Enter để chọn nhanh."
         );
         txtGoiY.setEditable(false);
-        txtGoiY.setFont(new Font("SansSerif", Font.PLAIN, 12));
-        txtGoiY.setForeground(new Color(100, 110, 120));
+        txtGoiY.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        txtGoiY.setForeground(new Color(90, 100, 110));
         txtGoiY.setBackground(new Color(250, 252, 255));
         txtGoiY.setBorder(BorderFactory.createLineBorder(new Color(230, 235, 245)));
         
         JScrollPane spGoiY = new JScrollPane(txtGoiY);
-        spGoiY.setPreferredSize(new Dimension(0, 85));
+        spGoiY.setPreferredSize(new Dimension(0, 95));
         cardSP.add(spGoiY);
 
-        panelLeft.add(cardSP);
+        boxLeft.add(cardSP);
+        panelCenter.add(boxLeft);
 
         // --- CỘT PHẢI ---
-        JPanel panelRight = new JPanel();
-        panelRight.setLayout(new BoxLayout(panelRight, BoxLayout.Y_AXIS));
-        panelRight.setOpaque(false);
+        Box boxRight = Box.createVerticalBox();
+        boxRight.setOpaque(false);
 
         // Card 3: Dịch vụ tự động
         JPanel cardDV = createCardPanel("3. Dịch vụ phát sinh (Tự động nạp)");
         JTextArea txtDVAuto = new JTextArea(
-            " Hệ thống sẽ tự động lọc các lịch hẹn 'Hoàn thành' nhưng chưa thanh toán của khách hàng được chọn."
+            " Hệ thống sẽ tự động lọc các lịch hẹn 'Hoàn thành' nhưng chưa thanh toán của khách hàng."
         );
         txtDVAuto.setEditable(false);
         txtDVAuto.setLineWrap(true);
         txtDVAuto.setWrapStyleWord(true);
-        txtDVAuto.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        txtDVAuto.setFont(new Font("SansSerif", Font.PLAIN, 12));
         txtDVAuto.setForeground(new Color(18, 57, 88));
         txtDVAuto.setBackground(new Color(235, 243, 255));
-        txtDVAuto.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        txtDVAuto.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         cardDV.add(txtDVAuto);
 
-        panelRight.add(cardDV);
-        panelRight.add(Box.createVerticalStrut(15));
+        boxRight.add(cardDV);
+        boxRight.add(Box.createVerticalStrut(15));
 
         // Card 4: Hóa đơn tạm & Thanh toán
         JPanel cardHD = createCardPanel("4. Chi tiết Hóa đơn tạm & Thanh toán");
@@ -163,14 +176,15 @@ public class BanHangPanel extends JPanel implements ActionListener {
         String[] cols = {"Loại", "Mã / Diễn giải", "SL", "Đơn giá", "Thành tiền"};
         modelHoaDonTam = new DefaultTableModel(new Object[][]{}, cols);
         tableHoaDonTam = new JTable(modelHoaDonTam);
-        tableHoaDonTam.setRowHeight(25);
-        tableHoaDonTam.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 11));
+        tableHoaDonTam.setRowHeight(28);
+        tableHoaDonTam.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        tableHoaDonTam.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 13));
         
         JScrollPane spTable = new JScrollPane(tableHoaDonTam);
         spTable.setPreferredSize(new Dimension(0, 110));
         cardHD.add(spTable);
 
-        JPanel pActionTable = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 2));
+        JPanel pActionTable = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 4));
         pActionTable.setOpaque(false);
         btnTangSL = new JButton("+ Tăng SL");
         btnGiamSL = new JButton("- Giảm SL");
@@ -182,38 +196,68 @@ public class BanHangPanel extends JPanel implements ActionListener {
         pActionTable.add(btnXoaDong);
         cardHD.add(pActionTable);
 
-        lblTongTien = new JLabel("<html><b>TỔNG TIỀN: <font color='red' size='4'>0 đ</font></b></html>");
-        lblTongTien.setBorder(new EmptyBorder(5, 5, 5, 5));
-        cardHD.add(lblTongTien);
+        // Khu vực tiền
+        Box boxTien = Box.createVerticalBox();
+        boxTien.setAlignmentX(Component.LEFT_ALIGNMENT);
+        boxTien.setBorder(new EmptyBorder(5, 0, 5, 0));
+        lblTienHang = new JLabel("Tiền hàng (chưa VAT): 0 đ");
+        lblTienHang.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        
+        lblTienThue = new JLabel("Thuế VAT (10%): 0 đ");
+        lblTienThue.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        
+        lblTongTien = new JLabel("<html><b>TỔNG THANH TOÁN: <font color='red' size='5'>0 đ</font></b></html>");
+        
+        boxTien.add(lblTienHang);
+        boxTien.add(Box.createVerticalStrut(3));
+        boxTien.add(lblTienThue);
+        boxTien.add(Box.createVerticalStrut(3));
+        boxTien.add(lblTongTien);
+        cardHD.add(boxTien);
 
-        JPanel pPayment = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
+        JPanel pPayment = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
         pPayment.setOpaque(false);
         rbTienMat = new JRadioButton("Tiền mặt", true);
         rbChuyenKhoan = new JRadioButton("Chuyển khoản");
         rbTienMat.setOpaque(false);
         rbChuyenKhoan.setOpaque(false);
+        rbTienMat.setFont(new Font("SansSerif", Font.BOLD, 13));
+        rbChuyenKhoan.setFont(new Font("SansSerif", Font.BOLD, 13));
         
         ButtonGroup bg = new ButtonGroup();
         bg.add(rbTienMat);
         bg.add(rbChuyenKhoan);
 
-        pPayment.add(new JLabel("Hình thức:"));
+        JLabel lblHinhThuc = new JLabel("Hình thức:");
+        lblHinhThuc.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        pPayment.add(lblHinhThuc);
+        pPayment.add(Box.createHorizontalStrut(10));
         pPayment.add(rbTienMat);
+        pPayment.add(Box.createHorizontalStrut(10));
         pPayment.add(rbChuyenKhoan);
         cardHD.add(pPayment);
 
-        panelTienMatInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 2));
+        panelTienMatInput = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
         panelTienMatInput.setOpaque(false);
-        txtTienKhachDua = new JTextField(10);
+        
+        JLabel lblKhachDua = new JLabel("Tiền khách đưa:");
+        lblKhachDua.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        
+        txtTienKhachDua = new JTextField(12);
+        txtTienKhachDua.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        txtTienKhachDua.setPreferredSize(new Dimension(140, 32));
+        
         lblTienThua = new JLabel("Tiền thừa: 0 đ");
+        lblTienThua.setFont(new Font("SansSerif", Font.BOLD, 13));
         lblTienThua.setForeground(new Color(0, 120, 0));
         
-        panelTienMatInput.add(new JLabel("Tiền khách đưa:"));
+        panelTienMatInput.add(lblKhachDua);
+        panelTienMatInput.add(Box.createHorizontalStrut(10));
         panelTienMatInput.add(txtTienKhachDua);
+        panelTienMatInput.add(Box.createHorizontalStrut(10));
         panelTienMatInput.add(lblTienThua);
         cardHD.add(panelTienMatInput);
 
-        // Tự động tính tiền thừa thời gian thực khi gõ phím
         txtTienKhachDua.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) { tinhTienThuaThoiGianThuc(); }
@@ -225,11 +269,12 @@ public class BanHangPanel extends JPanel implements ActionListener {
 
         btnXacNhanTT = new JButton("XÁC NHẬN THANH TOÁN & TẠO HÓA ĐƠN");
         btnXacNhanTT.setBackground(new Color(255, 177, 75));
-        btnXacNhanTT.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btnXacNhanTT.setFont(new Font("SansSerif", Font.BOLD, 13));
         btnXacNhanTT.setFocusPainted(false);
-        btnXacNhanTT.setAlignmentX(Component.CENTER_ALIGNMENT);
-        btnXacNhanTT.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        btnXacNhanTT.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btnXacNhanTT.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
+        // Đăng ký sự kiện
         btnThemKH.addActionListener(this);
         btnThemSP.addActionListener(this);
         btnXemDS.addActionListener(this);
@@ -243,17 +288,17 @@ public class BanHangPanel extends JPanel implements ActionListener {
         txtSearchKH.addActionListener(e -> timKiemKhachHang());
         txtSearchSP.addActionListener(e -> themSanPhamVaoBangTam());
 
-        cardHD.add(Box.createVerticalStrut(3));
+        cardHD.add(Box.createVerticalStrut(5));
         cardHD.add(btnXacNhanTT);
 
-        panelRight.add(cardHD);
+        boxRight.add(cardHD);
+        panelCenter.add(boxRight);
 
-        panelCenter.add(panelLeft);
-        panelCenter.add(panelRight);
         add(panelCenter, BorderLayout.CENTER);
 
-        JLabel lblFooter = new JLabel("• Quy định: Hóa đơn chỉ được sinh mã và lưu xuống CSDL khi xác nhận thanh toán thành công. Tồn kho tự động giảm.");
-        lblFooter.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        // Footer
+        JLabel lblFooter = new JLabel("• Quy định: Hóa đơn tự động tính thuế VAT 10% và giảm tồn kho khi thanh toán thành công.");
+        lblFooter.setFont(new Font("SansSerif", Font.ITALIC, 12));
         lblFooter.setForeground(new Color(180, 130, 40));
         JPanel pFooter = new JPanel(new FlowLayout(FlowLayout.LEFT));
         pFooter.setBackground(new Color(255, 248, 220));
@@ -262,27 +307,34 @@ public class BanHangPanel extends JPanel implements ActionListener {
         add(pFooter, BorderLayout.SOUTH);
     }
 
+    /**
+     * Hàm tạo Card Panel chuẩn căn trái toàn bộ các thành phần bên trong
+     */
     private JPanel createCardPanel(String title) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBackground(Color.WHITE);
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(225, 230, 238), 1),
-            new EmptyBorder(10, 10, 10, 10)
+            new EmptyBorder(12, 12, 12, 12)
         ));
         
         JLabel lbl = new JLabel(title);
-        lbl.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lbl.setFont(new Font("SansSerif", Font.BOLD, 14));
         lbl.setForeground(new Color(18, 57, 88));
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT); // Đảm bảo tiêu đề card bám sát lề trái
+        
         panel.add(lbl);
-        panel.add(Box.createVerticalStrut(6));
+        panel.add(Box.createVerticalStrut(8));
         return panel;
     }
 
-    private JButton createOrangeButton(String text) {
+    private JButton createLargeOrangeButton(String text) {
         JButton btn = new JButton(text);
         btn.setBackground(new Color(255, 177, 75));
-        btn.setFont(new Font("SansSerif", Font.BOLD, 11));
+        btn.setFont(new Font("SansSerif", Font.BOLD, 13));
+        btn.setMargin(new Insets(8, 14, 8, 14));
         btn.setFocusPainted(false);
         return btn;
     }
@@ -297,7 +349,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
         KhachHang kh = kh_dao.getKhachHangTheoSDT(sdt);
         if (kh != null) {
             khachHangHienTai = kh;
-            lblInfoKH.setText("<html><b>Đã chọn: " + kh.getMaKH() + " - " + kh.getHoTen() + "</b><br/><font color='#7A8CA0'>SĐT: " + kh.getSoDienThoai() + " • Địa chỉ: " + kh.getDiaChi() + "</font></html>");
+            lblInfoKH.setText("<html><b><font size='3'>Đã chọn: " + kh.getMaKH() + " - " + kh.getHoTen() + "</font></b><br/><font color='#7A8CA0' size='3'>SĐT: " + kh.getSoDienThoai() + " • Địa chỉ: " + kh.getDiaChi() + "</font></html>");
         } else {
             int choice = JOptionPane.showConfirmDialog(this, 
                 "Không tìm thấy khách hàng với từ khóa: " + sdt + "\nBạn có muốn thêm mới khách hàng này không?", 
@@ -310,15 +362,22 @@ public class BanHangPanel extends JPanel implements ActionListener {
 
     private void moFormThemKhachHang(String sdtGoiY) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Thêm khách hàng mới", true);
-        dialog.setSize(380, 280);
+        dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
-        dialog.setLayout(new GridLayout(6, 2, 8, 8));
-        dialog.getRootPane().setBorder(new EmptyBorder(12, 12, 12, 12));
+        dialog.setLayout(new GridLayout(6, 2, 10, 10));
+        dialog.getRootPane().setBorder(new EmptyBorder(15, 15, 15, 15));
 
         JTextField txtTen = new JTextField();
+        txtTen.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        
         JTextField txtSdt = new JTextField(sdtGoiY);
+        txtSdt.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        
         JComboBox<String> cbGioiTinh = new JComboBox<>(new String[]{"Nam", "Nữ", "Khác"});
+        cbGioiTinh.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        
         JTextField txtDiaChi = new JTextField();
+        txtDiaChi.setFont(new Font("SansSerif", Font.PLAIN, 13));
 
         dialog.add(new JLabel("Họ tên khách hàng (*):"));
         dialog.add(txtTen);
@@ -329,9 +388,9 @@ public class BanHangPanel extends JPanel implements ActionListener {
         dialog.add(new JLabel("Địa chỉ:"));
         dialog.add(txtDiaChi);
 
-        JButton btnLuu = new JButton("Lưu khách hàng");
-        btnLuu.setBackground(new Color(255, 177, 75));
+        JButton btnLuu = createLargeOrangeButton("Lưu khách hàng");
         JButton btnHuy = new JButton("Hủy");
+        btnHuy.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         dialog.add(btnHuy);
         dialog.add(btnLuu);
@@ -364,7 +423,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
             if (kq) {
                 JOptionPane.showMessageDialog(dialog, "Thêm khách hàng thành công!");
                 khachHangHienTai = khMoi;
-                lblInfoKH.setText("<html><b>Đã chọn: " + khMoi.getMaKH() + " - " + khMoi.getHoTen() + "</b><br/><font color='#7A8CA0'>SĐT: " + khMoi.getSoDienThoai() + " • Địa chỉ: " + khMoi.getDiaChi() + "</font></html>");
+                lblInfoKH.setText("<html><b><font size='3'>Đã chọn: " + khMoi.getMaKH() + " - " + khMoi.getHoTen() + "</font></b><br/><font color='#7A8CA0' size='3'>SĐT: " + khMoi.getSoDienThoai() + " • Địa chỉ: " + khMoi.getDiaChi() + "</font></html>");
                 dialog.dispose();
             } else {
                 JOptionPane.showMessageDialog(dialog, "Thêm khách hàng thất bại! (Trùng số điện thoại hoặc lỗi kết nối)");
@@ -445,7 +504,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
             }
 
             txtSearchSP.setText("");
-            tinhTongTienTam();
+            tinhToanTienHoaDon();
         }
     }
 
@@ -457,10 +516,10 @@ public class BanHangPanel extends JPanel implements ActionListener {
         }
 
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Danh sách sản phẩm tồn kho", true);
-        dialog.setSize(600, 400);
+        dialog.setSize(650, 450);
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout(10, 10));
-        dialog.getRootPane().setBorder(new EmptyBorder(10, 10, 10, 10));
+        dialog.getRootPane().setBorder(new EmptyBorder(12, 12, 12, 12));
 
         String[] cols = {"Mã SP", "Tên sản phẩm", "ĐVT", "Giá bán", "Tồn kho"};
         Object[][] data = new Object[dsSP.size()][5];
@@ -475,13 +534,15 @@ public class BanHangPanel extends JPanel implements ActionListener {
 
         DefaultTableModel model = new DefaultTableModel(data, cols);
         JTable table = new JTable(model);
-        table.setRowHeight(25);
+        table.setRowHeight(28);
+        table.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        table.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 13));
         
         JScrollPane scrollPane = new JScrollPane(table);
         dialog.add(scrollPane, BorderLayout.CENTER);
 
         JPanel pBottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnChon = createOrangeButton("Chọn sản phẩm này");
+        JButton btnChon = createLargeOrangeButton("Chọn sản phẩm này");
         pBottom.add(btnChon);
         dialog.add(pBottom, BorderLayout.SOUTH);
 
@@ -500,13 +561,20 @@ public class BanHangPanel extends JPanel implements ActionListener {
         dialog.setVisible(true);
     }
 
-    private void tinhTongTienTam() {
-        BigDecimal tong = BigDecimal.ZERO;
+    private void tinhToanTienHoaDon() {
+        BigDecimal tongThanhToanGomVAT = BigDecimal.ZERO;
         for (int i = 0; i < modelHoaDonTam.getRowCount(); i++) {
-            BigDecimal thanhTien = new BigDecimal(modelHoaDonTam.getValueAt(i, 4).toString());
-            tong = tong.add(thanhTien);
+            BigDecimal thanhTienRow = new BigDecimal(modelHoaDonTam.getValueAt(i, 4).toString());
+            tongThanhToanGomVAT = tongThanhToanGomVAT.add(thanhTienRow);
         }
-        lblTongTien.setText("<html><b>TỔNG TIỀN: <font color='red' size='4'>" + tong + " đ</font></b></html>");
+
+        BigDecimal tienHangChuaVAT = tongThanhToanGomVAT.divide(new BigDecimal("1.1"), 2, RoundingMode.HALF_UP);
+        BigDecimal tienThueVAT = tongThanhToanGomVAT.subtract(tienHangChuaVAT);
+
+        lblTienHang.setText("Tiền hàng (chưa VAT): " + tienHangChuaVAT + " đ");
+        lblTienThue.setText("Thuế VAT (10%): " + tienThueVAT + " đ");
+        lblTongTien.setText("<html><b>TỔNG THANH TOÁN: <font color='red' size='5'>" + tongThanhToanGomVAT + " đ</font></b></html>");
+
         tinhTienThuaThoiGianThuc();
     }
 
@@ -587,7 +655,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
                 modelHoaDonTam.setValueAt(slMoi, row, 2);
                 BigDecimal donGia = new BigDecimal(modelHoaDonTam.getValueAt(row, 3).toString());
                 modelHoaDonTam.setValueAt(donGia.multiply(BigDecimal.valueOf(slMoi)).toString(), row, 4);
-                tinhTongTienTam();
+                tinhToanTienHoaDon();
             } else {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng sản phẩm cần tăng số lượng!");
             }
@@ -600,12 +668,12 @@ public class BanHangPanel extends JPanel implements ActionListener {
                     modelHoaDonTam.setValueAt(slMoi, row, 2);
                     BigDecimal donGia = new BigDecimal(modelHoaDonTam.getValueAt(row, 3).toString());
                     modelHoaDonTam.setValueAt(donGia.multiply(BigDecimal.valueOf(slMoi)).toString(), row, 4);
-                    tinhTongTienTam();
+                    tinhToanTienHoaDon();
                 } else {
                     int choice = JOptionPane.showConfirmDialog(this, "Số lượng là 1, bạn có muốn xóa sản phẩm này khỏi hóa đơn tạm không?", "Xác nhận", JOptionPane.YES_NO_OPTION);
                     if (choice == JOptionPane.YES_OPTION) {
                         modelHoaDonTam.removeRow(row);
-                        tinhTongTienTam();
+                        tinhToanTienHoaDon();
                     }
                 }
             } else {
@@ -615,7 +683,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
             int row = tableHoaDonTam.getSelectedRow();
             if (row >= 0) {
                 modelHoaDonTam.removeRow(row);
-                tinhTongTienTam();
+                tinhToanTienHoaDon();
             } else {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn dòng cần xóa trên bảng tạm!");
             }
@@ -638,6 +706,29 @@ public class BanHangPanel extends JPanel implements ActionListener {
                 return;
             }
 
+            // Kiểm tra tiền khách đưa nếu chọn Tiền mặt
+            if (rbTienMat.isSelected()) {
+                String sTienDua = txtTienKhachDua.getText().trim();
+                if (sTienDua.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền khách đưa!");
+                    txtTienKhachDua.requestFocus();
+                    return;
+                }
+                try {
+                    BigDecimal tienDua = new BigDecimal(sTienDua);
+                    BigDecimal tongTien = layTongTienTam();
+                    if (tienDua.compareTo(tongTien) < 0) {
+                        JOptionPane.showMessageDialog(this, "Số tiền khách đưa không đủ để thanh toán!");
+                        txtTienKhachDua.requestFocus();
+                        return;
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Số tiền khách đưa không hợp lệ!");
+                    txtTienKhachDua.requestFocus();
+                    return;
+                }
+            }
+
             try {
                 String yyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyMMdd"));
                 int stt = hd_dao.demSoLuongHoaDonTrongNgay(yyMMdd) + 1;
@@ -652,12 +743,24 @@ public class BanHangPanel extends JPanel implements ActionListener {
                 HoaDon hd = new HoaDon();
                 hd.setMaHD(maHD);
                 hd.setNgayLap(ngayLap);
+                hd.setTrangThai("Đã thanh toán"); // Đảm bảo trạng thái hóa đơn
                 hd.setPhuongThucTT(ptTT);
                 hd.setKhachHang(khachHangHienTai);
                 hd.setNhanVien(nv);
 
-                ArrayList<Object[]> dsChiTietSP = new ArrayList<Object[]>();
-                ArrayList<Object[]> dsChiTietDV = new ArrayList<Object[]>();
+                // Nếu là tiền mặt, gán thêm tiền khách đưa và tiền thừa
+                if (rbTienMat.isSelected()) {
+                    BigDecimal tienDua = new BigDecimal(txtTienKhachDua.getText().trim());
+                    hd.setTienKhachDua(tienDua);
+                    hd.setTienThua(tienDua.subtract(layTongTienTam()));
+                }
+
+                // Gán tổng tiền thanh toán (đã gồm VAT) vào đối tượng HoaDon để DAO tính tiền hàng chưa VAT
+                hd.setTongTien(layTongTienTam());
+
+                // Thu thập danh sách chi tiết sản phẩm từ bảng tạm
+                ArrayList<Object[]> dsChiTietSP = new ArrayList<>();
+                ArrayList<Object[]> dsChiTietDV = new ArrayList<>(); // Tạm thời để trống, lát nữa chúng ta sẽ tích hợp phần Dịch vụ sau
 
                 for (int i = 0; i < modelHoaDonTam.getRowCount(); i++) {
                     String loai = modelHoaDonTam.getValueAt(i, 0).toString();
@@ -665,54 +768,34 @@ public class BanHangPanel extends JPanel implements ActionListener {
                     String maSP = maVaTen.split(" • ")[0];
                     int soLuong = Integer.parseInt(modelHoaDonTam.getValueAt(i, 2).toString());
                     BigDecimal donGia = new BigDecimal(modelHoaDonTam.getValueAt(i, 3).toString());
-                    BigDecimal thanhTienRow = new BigDecimal(modelHoaDonTam.getValueAt(i, 4).toString());
 
                     if (loai.equals("SP")) {
-                        SanPham sp = sp_dao.getSanPhamTheoMa(maSP);
-                        
-                        ChiTietHoaDon_SanPham ctsp = new ChiTietHoaDon_SanPham(sp, soLuong, donGia);
-                        hd.themChiTietSanPham(ctsp);
-
-                        // CHÚ Ý: Chỉ truyền 4 tham số [maSP, soLuong, donGia] vì thanhTien là cột tính toán trong CSDL
-                        Object[] ct = {maSP, soLuong, donGia};
-                        dsChiTietSP.add(ct);
+                        Object[] ctsp = {maSP, soLuong, donGia};
+                        dsChiTietSP.add(ctsp);
                     }
                 }
 
-                if (rbTienMat.isSelected()) {
-                    String sTienDua = txtTienKhachDua.getText().trim();
-                    if (sTienDua.isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "Vui lòng nhập số tiền khách đưa!");
-                        txtTienKhachDua.requestFocus();
-                        return;
-                    }
-                    hd.setTienKhachDua(new BigDecimal(sTienDua));
-                } else {
-                    hd.setTienKhachDua(null);
-                }
+                // Gọi DAO thực hiện Transaction lưu hóa đơn, trừ tồn kho
+                boolean kq = hd_dao.themHoaDon(hd, dsChiTietSP, dsChiTietDV);
 
-                hd.capNhatTongTien();
-                hd.setTienThua(hd.tinhTienThua());
-                hd.kiemTraThanhToan();
-
-                boolean ketQua = hd_dao.themHoaDon(hd, dsChiTietSP, dsChiTietDV);
-
-                if (ketQua) {
-                    JOptionPane.showMessageDialog(this, "Thanh toán thành công!\nMã hóa đơn: " + maHD + "\nTổng tiền: " + hd.getTongTien() + " đ\nĐã cập nhật giảm tồn kho.");
+                if (kq) {
+                    JOptionPane.showMessageDialog(this, "Thanh toán thành công!\nMã hóa đơn: " + maHD);
                     
+                    // Reset lại form bán hàng cho giao dịch tiếp theo
                     modelHoaDonTam.setRowCount(0);
+                    khachHangHienTai = null;
+                    txtSearchKH.setText("");
                     txtSearchSP.setText("");
                     txtTienKhachDua.setText("");
-                    lblTongTien.setText("<html><b>TỔNG TIỀN: <font color='red' size='4'>0 đ</font></b></html>");
-                    lblTienThua.setText("Tiền thừa: 0 đ");
-                    khachHangHienTai = null;
-                    lblInfoKH.setText("<html><b>Chưa chọn khách hàng nào!</b><br/><font color='#7A8CA0'>Vui lòng nhập số điện thoại để tìm kiếm hoặc thêm mới.</font></html>");
+                    lblInfoKH.setText("<html><b><font size='3'>Chưa chọn khách hàng nào!</font></b><br/><font color='#7A8CA0' size='3'>Vui lòng nhập số điện thoại để tìm kiếm hoặc thêm mới.</font></html>");
+                    tinhToanTienHoaDon();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Thanh toán thất bại! Lỗi khi ghi dữ liệu xuống cơ sở dữ liệu.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Thanh toán thất bại! Lỗi lưu cơ sở dữ liệu.");
                 }
 
-            } catch (IllegalArgumentException ex) {
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Lỗi ràng buộc nghiệp vụ", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Đã xảy ra lỗi trong quá trình thanh toán: " + ex.getMessage());
             }
         }
     }
