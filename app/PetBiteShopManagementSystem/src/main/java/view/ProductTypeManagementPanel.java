@@ -1,6 +1,13 @@
 package view;
 
+import app.UserSession;
+import entity.LoaiSanPham;
+import service.LoaiSanPham_Service;
+import service.impl.LoaiSanPham_ServiceImpl;
 import java.awt.BorderLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -18,6 +25,7 @@ import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -27,6 +35,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -83,10 +93,12 @@ public class ProductTypeManagementPanel extends JPanel {
     private JPanel khungPhanTrang;
     private JLabel nhanThongKePhanTrang;
     private JPanel khungCacNutChuyenTrang;
-    private JButton nutTrangTruoc;
-    private JButton nutTrangSoMot;
-    private JButton nutTrangSoHai;
-    private JButton nutTrangKeTiep;
+    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
+    private final ArrayList<LoaiSanPham> danhSachLoc = new ArrayList<>();
+    private final ArrayList<LoaiSanPham> danhSachTrang = new ArrayList<>();
+    private static final int SO_DONG_MOI_TRANG = 5;
+    private int trangHienTai = 1;
+    private boolean dangNapBoLoc = false;
 
     public ProductTypeManagementPanel() {
         khoiTaoGiaoDien();
@@ -175,7 +187,7 @@ public class ProductTypeManagementPanel extends JPanel {
         ));
 
         // Hộp chọn trạng thái
-        String[] danhSachLuaChonTrangThai = {"Trạng thái", "Đang sử dụng", "Ngừng sử dụng"};
+        String[] danhSachLuaChonTrangThai = {"Trạng thái", "Đang hoạt động", "Ngừng hoạt động"};
         hopChonTrangThai = new JComboBox<>(danhSachLuaChonTrangThai);
         hopChonTrangThai.setPreferredSize(new Dimension(140, 38));
         hopChonTrangThai.setFont(phongChuMoTa);
@@ -195,6 +207,23 @@ public class ProductTypeManagementPanel extends JPanel {
         khungBoLocBenTrai.add(oNhapTimKiem);
         khungBoLocBenTrai.add(hopChonTrangThai);
         khungBoLocBenTrai.add(hopChonSapXep);
+
+        oNhapTimKiem.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent suKien) {
+                locLaiTuDau();
+            }
+            @Override
+            public void removeUpdate(DocumentEvent suKien) {
+                locLaiTuDau();
+            }
+            @Override
+            public void changedUpdate(DocumentEvent suKien) {
+                locLaiTuDau();
+            }
+        });
+        hopChonTrangThai.addActionListener(suKien -> locLaiTuDau());
+        hopChonSapXep.addActionListener(suKien -> locLaiTuDau());
 
         // Nút thêm mới loại sản phẩm bên phải
         nutThemLoaiSanPham = new JButton("+ Thêm") {
@@ -217,10 +246,17 @@ public class ProductTypeManagementPanel extends JPanel {
         nutThemLoaiSanPham.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Mở popup Thêm loại sản phẩm
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            nutThemLoaiSanPham.setVisible(false);
+        }
         nutThemLoaiSanPham.addActionListener(suKien -> {
+            if (!UserSession.getInstance().laChuCuaHang()) {
+                JOptionPane.showMessageDialog(this, "Chỉ chủ cửa hàng được thêm loại sản phẩm.",
+                        "Không có quyền", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
             Frame cuaSoCha = (Frame) SwingUtilities.getWindowAncestor(this);
-            AddProductTypeDialog hopThoaiThem = new AddProductTypeDialog(cuaSoCha);
-            hopThoaiThem.setVisible(true);
+            new AddProductTypeDialog(cuaSoCha, this::napDuLieuTuCoSoDuLieu).setVisible(true);
         });
 
         khungThanhCongCu.add(khungBoLocBenTrai, BorderLayout.WEST);
@@ -236,15 +272,8 @@ public class ProductTypeManagementPanel extends JPanel {
 
         // ===== 3. Bảng dữ liệu loại sản phẩm =====
         String[] tieuDeCacCot = {"Mã loại", "Tên loại sản phẩm", "Mô tả", "Trạng thái", "Thao tác"};
-        Object[][] duLieuMauTuFigma = {
-            {"LSP241018001", "Thức ăn", "Thức ăn khô, pate và snack…", "Đang sử dụng", "Sửa"},
-            {"LSP241018002", "Phụ kiện", "Vòng cổ, dây dắt, chuồng…", "Đang sử dụng", "Sửa"},
-            {"LSP241018003", "Vệ sinh", "Cát vệ sinh, sữa tắm, lược…", "Đang sử dụng", "Sửa"},
-            {"LSP241018004", "Thuốc & bổ sung", "Vitamin, men tiêu hóa, thuốc…", "Ngừng sử dụng", "Sửa"},
-            {"LSP241018005", "Đồ chơi", "Bóng, gặm nhấm, cần câu…", "Đang sử dụng", "Sửa"}
-        };
 
-        moHinhBang = new DefaultTableModel(duLieuMauTuFigma, tieuDeCacCot) {
+        moHinhBang = new DefaultTableModel(tieuDeCacCot, 0) {
             @Override
             public boolean isCellEditable(int hang, int cot) {
                 return false; // Giao diện tĩnh, không chỉnh sửa trực tiếp trên ô
@@ -292,14 +321,24 @@ public class ProductTypeManagementPanel extends JPanel {
         bangLoaiSanPham.getColumnModel().getColumn(4).setCellRenderer(new BoKetXuatThaoTac());
 
         // Bắt sự kiện click vào nút "Sửa" ở cột thứ 4
+        if (!UserSession.getInstance().laChuCuaHang()) {
+            bangLoaiSanPham.removeColumn(bangLoaiSanPham.getColumnModel().getColumn(4));
+        }
         bangLoaiSanPham.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent suKien) {
                 int cotDuocChon = bangLoaiSanPham.columnAtPoint(suKien.getPoint());
-                if (cotDuocChon == 4) {
+                int hang = bangLoaiSanPham.rowAtPoint(suKien.getPoint());
+                if (cotDuocChon == 4 && hang >= 0 && hang < danhSachTrang.size()) {
+                    if (!UserSession.getInstance().laChuCuaHang()) {
+                        JOptionPane.showMessageDialog(ProductTypeManagementPanel.this,
+                                "Chỉ chủ cửa hàng được cập nhật loại sản phẩm.",
+                                "Không có quyền", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
                     Frame cuaSoCha = (Frame) SwingUtilities.getWindowAncestor(ProductTypeManagementPanel.this);
-                    UpdateProductTypeDialog hopThoaiCapNhat = new UpdateProductTypeDialog(cuaSoCha);
-                    hopThoaiCapNhat.setVisible(true);
+                    new UpdateProductTypeDialog(cuaSoCha, danhSachTrang.get(hang),
+                            ProductTypeManagementPanel.this::napDuLieuTuCoSoDuLieu).setVisible(true);
                 }
             }
         });
@@ -314,22 +353,12 @@ public class ProductTypeManagementPanel extends JPanel {
         khungPhanTrang.setOpaque(false);
         khungPhanTrang.setBorder(new EmptyBorder(16, 0, 0, 0));
 
-        nhanThongKePhanTrang = new JLabel("Hiển thị 1–5 / 25");
+        nhanThongKePhanTrang = new JLabel("Hiển thị 0 / 0");
         nhanThongKePhanTrang.setFont(phongChuMoTa);
         nhanThongKePhanTrang.setForeground(mauChuPhu);
 
         khungCacNutChuyenTrang = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         khungCacNutChuyenTrang.setOpaque(false);
-
-        nutTrangTruoc = taoNutChuyenTrang("<", false);
-        nutTrangSoMot = taoNutChuyenTrang("1", true);   // Trang đang active
-        nutTrangSoHai = taoNutChuyenTrang("2", false);
-        nutTrangKeTiep = taoNutChuyenTrang(">", false);
-
-        khungCacNutChuyenTrang.add(nutTrangTruoc);
-        khungCacNutChuyenTrang.add(nutTrangSoMot);
-        khungCacNutChuyenTrang.add(nutTrangSoHai);
-        khungCacNutChuyenTrang.add(nutTrangKeTiep);
 
         khungPhanTrang.add(nhanThongKePhanTrang, BorderLayout.WEST);
         khungPhanTrang.add(khungCacNutChuyenTrang, BorderLayout.EAST);
@@ -338,12 +367,104 @@ public class ProductTypeManagementPanel extends JPanel {
 
         // Gắn thẻ nội dung vào giao diện tổng
         add(theChuaDanhSach, BorderLayout.CENTER);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent suKien) {
+                napDuLieuTuCoSoDuLieu();
+            }
+        });
+        napDuLieuTuCoSoDuLieu();
+    }
+
+    private void locLaiTuDau() {
+        if (dangNapBoLoc) {
+            return;
+        }
+        trangHienTai = 1;
+        napDuLieuTuCoSoDuLieu();
+    }
+
+    private void napDuLieuTuCoSoDuLieu() {
+        Boolean trangThai = null;
+        if (hopChonTrangThai.getSelectedIndex() == 1) {
+            trangThai = Boolean.TRUE;
+        } else if (hopChonTrangThai.getSelectedIndex() == 2) {
+            trangThai = Boolean.FALSE;
+        }
+        ArrayList<LoaiSanPham> ketQua = loaiSanPhamService.locLoaiSanPham(
+                oNhapTimKiem.getText(), trangThai, kieuSapXepDangChon());
+        danhSachLoc.clear();
+        if (ketQua == null) {
+            moHinhBang.setRowCount(0);
+            danhSachTrang.clear();
+            nhanThongKePhanTrang.setText("Không tải được dữ liệu từ cơ sở dữ liệu.");
+            veNutPhanTrang(0);
+            return;
+        }
+        danhSachLoc.addAll(ketQua);
+        int tongTrang = Math.max(1, (int) Math.ceil(danhSachLoc.size() / (double) SO_DONG_MOI_TRANG));
+        if (trangHienTai > tongTrang) {
+            trangHienTai = tongTrang;
+        }
+        hienThiTrang();
+    }
+
+    private void hienThiTrang() {
+        moHinhBang.setRowCount(0);
+        danhSachTrang.clear();
+        int tong = danhSachLoc.size();
+        if (tong == 0) {
+            nhanThongKePhanTrang.setText("Không có dữ liệu phù hợp.");
+            veNutPhanTrang(0);
+            return;
+        }
+        int batDau = (trangHienTai - 1) * SO_DONG_MOI_TRANG;
+        int ketThuc = Math.min(batDau + SO_DONG_MOI_TRANG, tong);
+        for (int i = batDau; i < ketThuc; i++) {
+            LoaiSanPham loai = danhSachLoc.get(i);
+            danhSachTrang.add(loai);
+            moHinhBang.addRow(new Object[] {
+                loai.getMaLoaiSanPham(),
+                loai.getTenLoai(),
+                loai.getMoTa() == null ? "" : loai.getMoTa(),
+                loai.isTrangThai() ? "Đang hoạt động" : "Ngừng hoạt động",
+                "Sửa"
+            });
+        }
+        nhanThongKePhanTrang.setText("Hiển thị " + (batDau + 1) + "–" + ketThuc + " / " + tong);
+        veNutPhanTrang(tong);
+    }
+
+    private void veNutPhanTrang(int tongDong) {
+        khungCacNutChuyenTrang.removeAll();
+        int tongTrang = tongDong == 0 ? 1 : (int) Math.ceil(tongDong / (double) SO_DONG_MOI_TRANG);
+        khungCacNutChuyenTrang.add(taoNutChuyenTrang("<", false,
+                trangHienTai > 1 ? () -> { trangHienTai--; hienThiTrang(); } : null));
+        for (int i = 1; i <= tongTrang; i++) {
+            int trang = i;
+            khungCacNutChuyenTrang.add(taoNutChuyenTrang(String.valueOf(trang), trang == trangHienTai,
+                    () -> { trangHienTai = trang; hienThiTrang(); }));
+        }
+        khungCacNutChuyenTrang.add(taoNutChuyenTrang(">", false,
+                trangHienTai < tongTrang && tongDong > 0 ? () -> { trangHienTai++; hienThiTrang(); } : null));
+        khungCacNutChuyenTrang.revalidate();
+        khungCacNutChuyenTrang.repaint();
+    }
+
+    private String kieuSapXepDangChon() {
+        return switch (hopChonSapXep.getSelectedIndex()) {
+            case 1 -> "CU_NHAT";
+            case 2 -> "TEN_AZ";
+            case 3 -> "TEN_ZA";
+            default -> "MOI_NHAT";
+        };
     }
 
     /**
      * Hàm hỗ trợ tạo các nút số trang phân trang chuẩn kích thước 34x34 bo góc
      */
-    private JButton taoNutChuyenTrang(String kyTu, boolean dangKichHoat) {
+    private JButton taoNutChuyenTrang(String kyTu, boolean dangKichHoat, Runnable hanhDong) {
         JButton nut = new JButton(kyTu) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -368,8 +489,12 @@ public class ProductTypeManagementPanel extends JPanel {
         nut.setFocusPainted(false);
         nut.setContentAreaFilled(false);
         nut.setBorderPainted(false);
-        nut.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nut.setCursor(new Cursor(hanhDong == null ? Cursor.DEFAULT_CURSOR : Cursor.HAND_CURSOR));
         nut.setMargin(new Insets(0, 0, 0, 0));
+        nut.setEnabled(hanhDong != null);
+        if (hanhDong != null) {
+            nut.addActionListener(suKien -> hanhDong.run());
+        }
         return nut;
     }
 
@@ -380,7 +505,7 @@ public class ProductTypeManagementPanel extends JPanel {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             String giaTri = value != null ? value.toString() : "";
-            boolean laDangSuDung = giaTri.equalsIgnoreCase("Đang sử dụng");
+            boolean laDangSuDung = giaTri.equalsIgnoreCase("Đang hoạt động");
 
             JPanel khungBadge = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
             khungBadge.setOpaque(false);
@@ -398,7 +523,7 @@ public class ProductTypeManagementPanel extends JPanel {
             };
             nhanBadge.setFont(phongBadgeNho);
             nhanBadge.setForeground(laDangSuDung ? mauXanhTrangThai : mauDoTrangThai);
-            nhanBadge.setPreferredSize(new Dimension(laDangSuDung ? 110 : 120, 28));
+            nhanBadge.setPreferredSize(new Dimension(laDangSuDung ? 130 : 145, 28));
 
             khungBadge.add(nhanBadge);
             return khungBadge;

@@ -1,5 +1,8 @@
 package view;
 
+import entity.LoaiSanPham;
+import service.LoaiSanPham_Service;
+import service.impl.LoaiSanPham_ServiceImpl;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
@@ -17,6 +20,7 @@ import java.awt.geom.RoundRectangle2D;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -78,13 +82,26 @@ public class UpdateProductTypeDialog extends JDialog {
     private JLabel nhanKhungCanhBao;
     private JButton nutHuyBo;
     private JButton nutLuuCapNhat;
+    private LoaiSanPham loaiDangSua;
+    private Runnable sauKhiLuu;
+    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
 
     // Tọa độ phục vụ kéo thả cửa sổ modal
     private Point diemBamChuot;
 
     public UpdateProductTypeDialog(Frame cuaSoCha) {
+        this(cuaSoCha, null, null);
+    }
+
+    public UpdateProductTypeDialog(Frame cuaSoCha, LoaiSanPham loai, Runnable sauKhiLuu) {
         super(cuaSoCha, true);
+        this.sauKhiLuu = sauKhiLuu;
+        if (loai != null && loai.getMaLoaiSanPham() != null) {
+            LoaiSanPham tuCsdl = loaiSanPhamService.getLoaiSanPhamTheoMa(loai.getMaLoaiSanPham());
+            this.loaiDangSua = tuCsdl != null ? tuCsdl : loai;
+        }
         khoiTaoGiaoDien();
+        dienDuLieu();
     }
 
     private void khoiTaoGiaoDien() {
@@ -193,7 +210,7 @@ public class UpdateProductTypeDialog extends JDialog {
         nhanMaLoaiSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanMaLoaiSanPham);
 
-        oNhapMaLoaiSanPham = taoONhapLieuBoGoc("LSP241018001", false);
+        oNhapMaLoaiSanPham = taoONhapLieuBoGoc("", false);
         oNhapMaLoaiSanPham.setBounds(34, 178, 290, 42);
         theChuaModal.add(oNhapMaLoaiSanPham);
 
@@ -204,7 +221,7 @@ public class UpdateProductTypeDialog extends JDialog {
         nhanTenLoaiSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanTenLoaiSanPham);
 
-        oNhapTenLoaiSanPham = taoONhapLieuBoGoc("Thức ăn", true);
+        oNhapTenLoaiSanPham = taoONhapLieuBoGoc("", true);
         oNhapTenLoaiSanPham.setBounds(356, 178, 290, 42);
         theChuaModal.add(oNhapTenLoaiSanPham);
 
@@ -215,7 +232,7 @@ public class UpdateProductTypeDialog extends JDialog {
         nhanTrangThai.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanTrangThai);
 
-        hopChonTrangThai = new JComboBox<>(new String[]{"Đang sử dụng", "Ngừng sử dụng"});
+        hopChonTrangThai = new JComboBox<>(new String[]{"Đang hoạt động", "Ngừng hoạt động"});
         hopChonTrangThai.setBounds(34, 262, 290, 42);
         hopChonTrangThai.setFont(phongNhapLieu);
         hopChonTrangThai.setBackground(mauNenOData);
@@ -229,7 +246,7 @@ public class UpdateProductTypeDialog extends JDialog {
         nhanMoTa.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanMoTa);
 
-        vungNhapMoTa = new JTextArea("Thức ăn khô, pate và snack dành cho thú cưng");
+        vungNhapMoTa = new JTextArea();
         vungNhapMoTa.setFont(phongNhapLieu);
         vungNhapMoTa.setForeground(mauChuTieuDe);
         vungNhapMoTa.setBackground(mauNenOData);
@@ -243,7 +260,7 @@ public class UpdateProductTypeDialog extends JDialog {
         theChuaModal.add(thanhCuonMoTa);
 
         // 8. Khung cảnh báo nghiệp vụ (x=34, y=462, w=612, h=54)
-        nhanKhungCanhBao = new JLabel("<html>• Chỉ được chuyển sang <b>ngừng sử dụng</b> khi loại sản phẩm không còn liên kết với bất kỳ sản phẩm nào.</html>") {
+        nhanKhungCanhBao = new JLabel("<html>• Chỉ được chuyển sang <b>ngừng hoạt động</b> khi loại sản phẩm không còn liên kết với bất kỳ sản phẩm nào.</html>") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -305,6 +322,7 @@ public class UpdateProductTypeDialog extends JDialog {
         nutLuuCapNhat.setContentAreaFilled(false);
         nutLuuCapNhat.setBorderPainted(false);
         nutLuuCapNhat.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nutLuuCapNhat.addActionListener(suKien -> luuCapNhat());
         theChuaModal.add(nutLuuCapNhat);
 
         // Nhấn ESC để đóng modal
@@ -342,5 +360,50 @@ public class UpdateProductTypeDialog extends JDialog {
         ));
         oNhap.setEditable(choPhepNhap);
         return oNhap;
+    }
+
+    private void dienDuLieu() {
+        if (loaiDangSua == null) {
+            JOptionPane.showMessageDialog(this, "Không tải được loại sản phẩm được chọn.",
+                    "Không có dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        oNhapMaLoaiSanPham.setText(loaiDangSua.getMaLoaiSanPham());
+        oNhapTenLoaiSanPham.setText(loaiDangSua.getTenLoai());
+        vungNhapMoTa.setText(loaiDangSua.getMoTa() == null ? "" : loaiDangSua.getMoTa());
+        hopChonTrangThai.setSelectedIndex(loaiDangSua.isTrangThai() ? 0 : 1);
+    }
+
+    private void luuCapNhat() {
+        if (loaiDangSua == null) {
+            JOptionPane.showMessageDialog(this, "Không xác định được loại sản phẩm cần cập nhật.",
+                    "Không có dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String tenLoai = oNhapTenLoaiSanPham.getText().trim();
+        if (tenLoai.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Tên loại sản phẩm không được để trống.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try {
+            loaiDangSua.setTenLoai(tenLoai);
+            loaiDangSua.setMoTa(vungNhapMoTa.getText());
+            loaiDangSua.setTrangThai(hopChonTrangThai.getSelectedIndex() == 0);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String loi = loaiSanPhamService.capNhatLoaiSanPham(loaiDangSua);
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không cập nhật được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Đã cập nhật loại sản phẩm " + loaiDangSua.getMaLoaiSanPham() + ".",
+                "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        dispose();
+        if (sauKhiLuu != null) {
+            sauKhiLuu.run();
+        }
     }
 }

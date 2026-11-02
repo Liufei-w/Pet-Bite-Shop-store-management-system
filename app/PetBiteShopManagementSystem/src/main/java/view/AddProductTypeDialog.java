@@ -1,5 +1,8 @@
 package view;
 
+import entity.LoaiSanPham;
+import service.LoaiSanPham_Service;
+import service.impl.LoaiSanPham_ServiceImpl;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -18,6 +21,7 @@ import java.awt.geom.RoundRectangle2D;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -80,12 +84,19 @@ public class AddProductTypeDialog extends JDialog {
     private JLabel nhanKhungCanhBao;
     private JButton nutHuyBo;
     private JButton nutLuuLoaiSanPham;
+    private Runnable sauKhiLuu;
+    private final LoaiSanPham_Service loaiSanPhamService = new LoaiSanPham_ServiceImpl();
 
     // Tọa độ phục vụ kéo thả cửa sổ modal
     private Point diemBamChuot;
 
     public AddProductTypeDialog(Frame cuaSoCha) {
+        this(cuaSoCha, null);
+    }
+
+    public AddProductTypeDialog(Frame cuaSoCha, Runnable sauKhiLuu) {
         super(cuaSoCha, true);
+        this.sauKhiLuu = sauKhiLuu;
         khoiTaoGiaoDien();
     }
 
@@ -195,7 +206,7 @@ public class AddProductTypeDialog extends JDialog {
         nhanMaLoaiSanPham.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanMaLoaiSanPham);
 
-        oNhapMaLoaiSanPham = taoONhapLieuBoGoc("LSP241018006 (tự động)", false, false);
+        oNhapMaLoaiSanPham = taoONhapLieuBoGoc("Tự động", false, false);
         oNhapMaLoaiSanPham.setBounds(34, 178, 290, 42);
         theChuaModal.add(oNhapMaLoaiSanPham);
 
@@ -217,7 +228,7 @@ public class AddProductTypeDialog extends JDialog {
         nhanTrangThai.setForeground(mauChuTieuDe);
         theChuaModal.add(nhanTrangThai);
 
-        hopChonTrangThai = new JComboBox<>(new String[]{"Đang sử dụng", "Ngừng sử dụng"});
+        hopChonTrangThai = new JComboBox<>(new String[]{"Đang hoạt động", "Ngừng hoạt động"});
         hopChonTrangThai.setBounds(34, 262, 290, 42);
         hopChonTrangThai.setFont(phongNhapLieu);
         hopChonTrangThai.setBackground(mauNenOData);
@@ -270,7 +281,7 @@ public class AddProductTypeDialog extends JDialog {
         theChuaModal.add(thanhCuonMoTa);
 
         // 8. Khung cảnh báo nghiệp vụ (x=34, y=462, w=612, h=54)
-        nhanKhungCanhBao = new JLabel("<html>• Chỉ được chuyển sang <b>ngừng sử dụng</b> khi loại sản phẩm không còn liên kết với bất kỳ sản phẩm nào.</html>") {
+        nhanKhungCanhBao = new JLabel("<html>• Chỉ được chuyển sang <b>ngừng hoạt động</b> khi loại sản phẩm không còn liên kết với bất kỳ sản phẩm nào.</html>") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -332,6 +343,7 @@ public class AddProductTypeDialog extends JDialog {
         nutLuuLoaiSanPham.setContentAreaFilled(false);
         nutLuuLoaiSanPham.setBorderPainted(false);
         nutLuuLoaiSanPham.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        nutLuuLoaiSanPham.addActionListener(suKien -> luuLoaiSanPham());
         theChuaModal.add(nutLuuLoaiSanPham);
 
         // Nhấn ESC để đóng modal
@@ -392,5 +404,34 @@ public class AddProductTypeDialog extends JDialog {
         ));
         oNhap.setEditable(choPhepNhap);
         return oNhap;
+    }
+
+    private void luuLoaiSanPham() {
+        String tenLoai = oNhapTenLoaiSanPham.getText().trim();
+        if (tenLoai.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Tên loại sản phẩm không được để trống.",
+                    "Thiếu dữ liệu", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        LoaiSanPham loai = new LoaiSanPham();
+        try {
+            loai.setTenLoai(tenLoai);
+            loai.setMoTa(vungNhapMoTa.getText());
+            loai.setTrangThai(hopChonTrangThai.getSelectedIndex() == 0);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Dữ liệu không hợp lệ", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        String loi = loaiSanPhamService.themLoaiSanPham(loai);
+        if (loi != null) {
+            JOptionPane.showMessageDialog(this, loi, "Không lưu được", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        JOptionPane.showMessageDialog(this, "Đã thêm loại sản phẩm " + loai.getMaLoaiSanPham() + ".",
+                "Thành công", JOptionPane.INFORMATION_MESSAGE);
+        dispose();
+        if (sauKhiLuu != null) {
+            sauKhiLuu.run();
+        }
     }
 }
