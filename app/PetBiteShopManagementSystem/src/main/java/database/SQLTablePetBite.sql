@@ -127,23 +127,22 @@ GO
 
 /* ---------- 6. SanPham (Cap nhat giaBan = giaNhap + tienLoi) ---------- */
 CREATE TABLE SanPham (
-    maSP       VARCHAR(15)    NOT NULL,
-    tenSP      NVARCHAR(100)  NOT NULL,
-    donViTinh  NVARCHAR(20)   NOT NULL,
-    giaNhap    DECIMAL(12,2)  NOT NULL,   -- Gia nhap vao
-    tienLoi    DECIMAL(12,2)  NOT NULL,   -- Tien loi du kien
-    giaBan     AS (CAST(giaNhap + tienLoi AS DECIMAL(12,2))) PERSISTED, -- Cot tinh toan: giaBan = giaNhap + tienLoi
-    soLuongTon INT            NOT NULL CONSTRAINT DF_SanPham_soLuongTon DEFAULT (0),
-    trangThai  BIT            NOT NULL CONSTRAINT DF_SanPham_trangThai DEFAULT (1),
-    maLoaiSP   VARCHAR(15)    NOT NULL,
+    maSP         VARCHAR(15)    NOT NULL,
+    tenSP        NVARCHAR(100)  NOT NULL,
+    donViTinh    NVARCHAR(20)   NOT NULL,
+    giaNhap      DECIMAL(12,2)  NOT NULL,
+    tienLoi      DECIMAL(12,2)  NOT NULL CONSTRAINT DF_SanPham_tienLoi DEFAULT (0),
+    giaBan       AS (giaNhap + tienLoi) PERSISTED,   -- gia ban dan xuat, khong INSERT/UPDATE
+    soLuongTon   INT            NOT NULL CONSTRAINT DF_SanPham_soLuongTon DEFAULT (0),
+    trangThai    BIT            NOT NULL CONSTRAINT DF_SanPham_trangThai DEFAULT (1),   -- 1: dang kinh doanh
+    maLoaiSP     VARCHAR(15)    NOT NULL,
     CONSTRAINT PK_SanPham PRIMARY KEY (maSP),
     CONSTRAINT FK_SanPham_LoaiSanPham FOREIGN KEY (maLoaiSP) REFERENCES LoaiSanPham(maLoaiSP),
     CONSTRAINT CK_SanPham_maSP CHECK (maSP LIKE 'SP[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
     CONSTRAINT CK_SanPham_tenSP CHECK (LEN(LTRIM(RTRIM(tenSP))) > 0),
     CONSTRAINT CK_SanPham_donViTinh CHECK (LEN(LTRIM(RTRIM(donViTinh))) > 0),
-    CONSTRAINT CK_SanPham_giaNhap CHECK (giaNhap >= 0),
+    CONSTRAINT CK_SanPham_giaNhap CHECK (giaNhap > 0),
     CONSTRAINT CK_SanPham_tienLoi CHECK (tienLoi >= 0),
-    CONSTRAINT CK_SanPham_giaBan CHECK (giaNhap + tienLoi > 0),
     CONSTRAINT CK_SanPham_soLuongTon CHECK (soLuongTon >= 0)
 );
 GO

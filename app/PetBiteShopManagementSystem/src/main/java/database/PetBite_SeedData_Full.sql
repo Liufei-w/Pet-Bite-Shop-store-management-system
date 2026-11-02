@@ -84,27 +84,33 @@ INSERT INTO TaiKhoan (maTK, tenDangNhap, matKhau, trangThai, maNV) VALUES
     (N'TK251001005', N'chamsoc2', N'f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc', 1, N'NV251001005'),
     (N'TK251001006', N'thungan3', N'f8d8a1f8392201070c68af1314ab8c76a3d450545a7e553dacf6d8a06f01b8cc', 0, N'NV251001006');
 
+<<<<<<< HEAD
+=======
+-- SP12 het hang (ton = 0); SP13 ngung kinh doanh; SP14, SP15, SP17, SP18 ton thap.
+-- Gia ban = giaNhap + tienLoi (cot tinh). tienLoi = 0 de gia ban trung dung so da dung trong du lieu mau cu.
+-- Day la cach tach ky thuat, khong phai gia von lich su da kiem chung.
+>>>>>>> 475c3da537f1f1b132a3f8645806344193bfd48e
 INSERT INTO SanPham (maSP, tenSP, donViTinh, giaNhap, tienLoi, soLuongTon, trangThai, maLoaiSP) VALUES
-    (N'SP251001001', N'Hạt Royal Canin cho chó 2kg', N'Túi', 300000, 85000, 40, 1, N'LSP251001001'),
-    (N'SP251001002', N'Pate Whiskas cho mèo', N'Lon', 22000, 6000, 120, 1, N'LSP251001001'),
-    (N'SP251001003', N'Xương gặm sạch răng', N'Gói', 35000, 10000, 80, 1, N'LSP251001001'),
-    (N'SP251001004', N'Bóng cao su phát tiếng', N'Cái', 45000, 15000, 35, 1, N'LSP251001002'),
-    (N'SP251001005', N'Cần câu mèo lông vũ', N'Cái', 40000, 15000, 25, 1, N'LSP251001002'),
-    (N'SP251001006', N'Vòng cổ có chuông', N'Cái', 65000, 20000, 30, 1, N'LSP251001003'),
-    (N'SP251001007', N'Dây dắt chó 1.5m', N'Cái', 90000, 30000, 18, 1, N'LSP251001003'),
-    (N'SP251001008', N'Áo thú cưng size M', N'Cái', 110000, 40000, 12, 1, N'LSP251001003'),
-    (N'SP251001009', N'Sữa tắm khử mùi 500ml', N'Chai', 105000, 35000, 22, 1, N'LSP251001004'),
-    (N'SP251001010', N'Cát vệ sinh cho mèo 5L', N'Túi', 70000, 25000, 60, 1, N'LSP251001004'),
-    (N'SP251001011', N'Lược chải lông', N'Cái', 50000, 20000, 15, 1, N'LSP251001004'),
-    (N'SP251001012', N'Bánh thưởng cho chó', N'Gói', 28000, 10000, 0, 1, N'LSP251001001'),
-    (N'SP251001013', N'Hạt cho mèo 1kg (ngừng kinh doanh)', N'Túi', 120000, 40000, 0, 0, N'LSP251001006'),
-    (N'SP251001014', N'Hạt Me-O cho mèo 1.2kg', N'Túi', 75000, 23000, 8, 1, N'LSP251001001'),
-    (N'SP251001015', N'Pate Pedigree cho chó', N'Gói', 18000, 6000, 3, 1, N'LSP251001001'),
-    (N'SP251001016', N'Gặm xương da bò', N'Cái', 38000, 14000, 45, 1, N'LSP251001001'),
-    (N'SP251001017', N'Chuồng nhựa size M', N'Cái', 350000, 100000, 6, 1, N'LSP251001005'),
-    (N'SP251001018', N'Nhà cây cho mèo', N'Cái', 680000, 210000, 4, 1, N'LSP251001005'),
-    (N'SP251001019', N'Bát ăn inox', N'Cái', 48000, 17000, 50, 1, N'LSP251001003'),
-    (N'SP251001020', N'Thuốc xịt khử mùi', N'Chai', 58000, 20000, 28, 1, N'LSP251001004');
+    (N'SP251001001', N'Hạt Royal Canin cho chó 2kg', N'Túi', 385000, 0, 40, 1, N'LSP251001001'),
+    (N'SP251001002', N'Pate Whiskas cho mèo', N'Lon', 28000, 0, 120, 1, N'LSP251001001'),
+    (N'SP251001003', N'Xương gặm sạch răng', N'Gói', 45000, 0, 80, 1, N'LSP251001001'),
+    (N'SP251001004', N'Bóng cao su phát tiếng', N'Cái', 60000, 0, 35, 1, N'LSP251001002'),
+    (N'SP251001005', N'Cần câu mèo lông vũ', N'Cái', 55000, 0, 25, 1, N'LSP251001002'),
+    (N'SP251001006', N'Vòng cổ có chuông', N'Cái', 85000, 0, 30, 1, N'LSP251001003'),
+    (N'SP251001007', N'Dây dắt chó 1.5m', N'Cái', 120000, 0, 18, 1, N'LSP251001003'),
+    (N'SP251001008', N'Áo thú cưng size M', N'Cái', 150000, 0, 12, 1, N'LSP251001003'),
+    (N'SP251001009', N'Sữa tắm khử mùi 500ml', N'Chai', 140000, 0, 22, 1, N'LSP251001004'),
+    (N'SP251001010', N'Cát vệ sinh cho mèo 5L', N'Túi', 95000, 0, 60, 1, N'LSP251001004'),
+    (N'SP251001011', N'Lược chải lông', N'Cái', 70000, 0, 15, 1, N'LSP251001004'),
+    (N'SP251001012', N'Bánh thưởng cho chó', N'Gói', 38000, 0, 0, 1, N'LSP251001001'),
+    (N'SP251001013', N'Hạt cho mèo 1kg (ngừng kinh doanh)', N'Túi', 160000, 0, 0, 0, N'LSP251001006'),
+    (N'SP251001014', N'Hạt Me-O cho mèo 1.2kg', N'Túi', 98000, 0, 8, 1, N'LSP251001001'),
+    (N'SP251001015', N'Pate Pedigree cho chó', N'Gói', 24000, 0, 3, 1, N'LSP251001001'),
+    (N'SP251001016', N'Gặm xương da bò', N'Cái', 52000, 0, 45, 1, N'LSP251001001'),
+    (N'SP251001017', N'Chuồng nhựa size M', N'Cái', 450000, 0, 6, 1, N'LSP251001005'),
+    (N'SP251001018', N'Nhà cây cho mèo', N'Cái', 890000, 0, 4, 1, N'LSP251001005'),
+    (N'SP251001019', N'Bát ăn inox', N'Cái', 65000, 0, 50, 1, N'LSP251001003'),
+    (N'SP251001020', N'Thuốc xịt khử mùi', N'Chai', 78000, 0, 28, 1, N'LSP251001004');
 
 INSERT INTO ThuCung (maThuCung, tenThuCung, loai, giong, gioiTinh, ngaySinh, canNang, trangThai, maKH) VALUES
     (N'TC251001001', N'Mực', N'Chó', N'Poodle', N'Đực', N'2022-03-15', 5.2, 1, N'KH251001001'),
