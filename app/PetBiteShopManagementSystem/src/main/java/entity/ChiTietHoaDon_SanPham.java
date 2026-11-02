@@ -62,7 +62,7 @@ public class ChiTietHoaDon_SanPham {
         this.donGia = donGia;
     }
 
-    //Nghiệp vụ
+    // Nghiệp vụ
     /** Thành tiền = số lượng * đơn giá. */
     public BigDecimal tinhThanhTien() {
         if (donGia == null) {
