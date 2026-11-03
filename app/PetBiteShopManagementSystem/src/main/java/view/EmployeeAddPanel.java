@@ -47,7 +47,6 @@ public class EmployeeAddPanel extends JPanel {
     private JTextField txtNgaySinh;
     private JTextField txtSoDienThoai;
     private JTextField txtEmail;
-    private JComboBox<String> cbCaLamViec;
     private JComboBox<String> cbChucVu;
     private JTextField txtDiaChi;
     private JTextField txtTenDangNhap;
@@ -123,18 +122,16 @@ public class EmployeeAddPanel extends JPanel {
         formContainer.add(row1);
         formContainer.add(Box.createVerticalStrut(14));
 
-        // Hàng 2: Số điện thoại, Email, Ca làm việc, Chức vụ (4 cột)
-        JPanel row2 = new JPanel(new GridLayout(1, 4, 16, 0));
+        // Hàng 2: Số điện thoại, Email, Chức vụ
+        JPanel row2 = new JPanel(new GridLayout(1, 3, 16, 0));
         row2.setOpaque(false);
 
         txtSoDienThoai = taoTextFieldWithPlaceholder("Nhập số điện thoại");
         txtEmail = taoTextFieldWithPlaceholder("Nhập địa chỉ email");
-        cbCaLamViec = taoComboBox(new String[]{"Ca sáng", "Ca tối", "Ca hành chính"});
         cbChucVu = taoComboBox(new String[]{"Chọn chức vụ", "Thu ngân", "Chăm sóc"});
 
         row2.add(taoFormItem("Số điện thoại", txtSoDienThoai));
         row2.add(taoFormItem("Email", txtEmail));
-        row2.add(taoFormItem("Ca làm việc", cbCaLamViec));
         row2.add(taoFormItem("Chức vụ", cbChucVu));
         formContainer.add(row2);
         formContainer.add(Box.createVerticalStrut(14));
@@ -535,7 +532,6 @@ public class EmployeeAddPanel extends JPanel {
         String ngaySinh = txtNgaySinh.getText().trim();
         String sdt = txtSoDienThoai.getText().trim();
         String email = txtEmail.getText().trim();
-        String caLamViec = (String) cbCaLamViec.getSelectedItem();
         String chucVu = (String) cbChucVu.getSelectedItem();
         String diaChi = txtDiaChi.getText().trim();
         String tenDangNhap = txtTenDangNhap.getText().trim();
@@ -597,7 +593,7 @@ public class EmployeeAddPanel extends JPanel {
         String rawMaNV = txtMaNV.getText().trim();
         String maNV = rawMaNV.contains(" ") ? rawMaNV.substring(0, rawMaNV.indexOf(" ")) : rawMaNV;
         EmployeeManagementPanel.NhanVienItem nvMoi = new EmployeeManagementPanel.NhanVienItem(
-            maNV, hoTen, gioiTinh, ngaySinh, sdt, email, chucVu, caLamViec, trangThai
+            maNV, hoTen, gioiTinh, ngaySinh, sdt, email, chucVu, "", trangThai
         );
 
         EmployeeManagementPanel.TaiKhoanItem tkMoi = new EmployeeManagementPanel.TaiKhoanItem(
