@@ -13,7 +13,6 @@ import javax.swing.border.EmptyBorder;
 
 /**
  * Màn hình Đăng nhập (LoginFrame) - Pet Bite Shop
- * Thiết kế chuẩn theo giao diện tham chiếu:
  * - Bên trái: Panel thông điệp thương hiệu, logo, tranh minh họa thú cưng và danh sách tính năng
  * - Bên phải: Khung đăng nhập hiện đại với đầy đủ tính năng kiểm tra tài khoản, hiện/ẩn mật khẩu, quên mật khẩu
  */
