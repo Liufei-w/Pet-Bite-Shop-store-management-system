@@ -48,7 +48,6 @@ public class EmployeeUpdatePanel extends JPanel {
     private JTextField txtSoDienThoai;
     private JTextField txtEmail;
     private JComboBox<String> cbChucVu;
-    private JComboBox<String> cbCaLamViec;
     private JTextField txtDiaChi;
 
     // Các nút thao tác
@@ -139,24 +138,13 @@ public class EmployeeUpdatePanel extends JPanel {
         formContainer.add(row3);
         formContainer.add(Box.createVerticalStrut(14));
 
-        // Hàng 4: Ca làm việc (cột 1 chiếm 1/2 hàng như hình mẫu)
-        JPanel row4 = new JPanel(new GridLayout(1, 2, 20, 0));
+        // Hàng 4: Địa chỉ (Full width)
+        JPanel row4 = new JPanel(new BorderLayout());
         row4.setOpaque(false);
-
-        cbCaLamViec = taoComboBox(new String[]{"Ca sáng", "Ca tối", "Ca hành chính"});
-
-        row4.add(taoFormItem("Ca làm việc", cbCaLamViec));
-        row4.add(Box.createGlue());
-        formContainer.add(row4);
-        formContainer.add(Box.createVerticalStrut(14));
-
-        // Hàng 5: Địa chỉ (Full width)
-        JPanel row5 = new JPanel(new BorderLayout());
-        row5.setOpaque(false);
         txtDiaChi = taoTextFieldWithPlaceholder("Nhập địa chỉ nhân viên");
         txtDiaChi.setPreferredSize(new Dimension(txtDiaChi.getPreferredSize().width, 68));
-        row5.add(taoFormItem("Địa chỉ", txtDiaChi), BorderLayout.CENTER);
-        formContainer.add(row5);
+        row4.add(taoFormItem("Địa chỉ", txtDiaChi), BorderLayout.CENTER);
+        formContainer.add(row4);
         formContainer.add(Box.createVerticalStrut(14));
 
         // Banner Ghi chú / Cảnh báo hợp lệ
@@ -242,7 +230,6 @@ public class EmployeeUpdatePanel extends JPanel {
         txtSoDienThoai.setText(nv.soDienThoai);
         txtEmail.setText(nv.email);
         cbChucVu.setSelectedItem(nv.chucVu);
-        cbCaLamViec.setSelectedItem(nv.caLamViec);
         txtDiaChi.setText("12 Nguyễn Trãi, Quận 5, TP.HCM");
     }
 
@@ -412,7 +399,6 @@ public class EmployeeUpdatePanel extends JPanel {
         String sdt = txtSoDienThoai.getText().trim();
         String email = txtEmail.getText().trim();
         String chucVu = (String) cbChucVu.getSelectedItem();
-        String caLamViec = (String) cbCaLamViec.getSelectedItem();
         String diaChi = txtDiaChi.getText().trim();
 
         if (hoTen.isEmpty() || sdt.isEmpty() || email.isEmpty() || ngaySinh.isEmpty()) {
@@ -442,7 +428,6 @@ public class EmployeeUpdatePanel extends JPanel {
         nhanVienHienTai.soDienThoai = sdt;
         nhanVienHienTai.email = email;
         nhanVienHienTai.chucVu = chucVu;
-        nhanVienHienTai.caLamViec = caLamViec;
 
         if (onUpdateListener != null) {
             onUpdateListener.onUpdateSuccess(nhanVienHienTai, diaChi);

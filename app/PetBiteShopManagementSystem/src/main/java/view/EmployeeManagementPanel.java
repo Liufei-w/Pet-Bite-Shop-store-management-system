@@ -168,8 +168,7 @@ public class EmployeeManagementPanel extends JPanel {
                 for (NhanVien nv : listNvDB) {
                     String ns = nv.getNgaySinh() != null ? nv.getNgaySinh().format(fmt) : "01/01/2000";
                     String tt = nv.isTrangThai() ? "Hoạt động" : "Bị khóa";
-                    String ca = (nv.getMaNV().endsWith("2") || nv.getMaNV().endsWith("4")) ? "Ca tối" : "Ca sáng";
-                    danhSachNV.add(new NhanVienItem(nv.getMaNV(), nv.getHoTen(), nv.getGioiTinh(), ns, nv.getSoDienThoai(), "tranphuc@gmail.com", nv.getVaiTro(), ca, tt));
+                    danhSachNV.add(new NhanVienItem(nv.getMaNV(), nv.getHoTen(), nv.getGioiTinh(), ns, nv.getSoDienThoai(), "tranphuc@gmail.com", nv.getVaiTro(), "", tt));
                 }
 
                 if (listTkDB != null) {
@@ -541,9 +540,9 @@ public class EmployeeManagementPanel extends JPanel {
 
         String[] cotNV;
         if (isChuCuaHang) {
-            cotNV = new String[]{"Mã NV", "Họ và tên", "Giới tính", "Ngày sinh", "SĐT", "Email", "Chức vụ", "Ca làm việc", "Trạng thái", "Thao tác"};
+            cotNV = new String[]{"Mã NV", "Họ và tên", "Giới tính", "Ngày sinh", "SĐT", "Email", "Chức vụ", "Trạng thái", "Thao tác"};
         } else {
-            cotNV = new String[]{"Mã NV", "Họ và tên", "Giới tính", "Ngày sinh", "SĐT", "Email", "Chức vụ", "Ca làm việc", "Trạng thái"};
+            cotNV = new String[]{"Mã NV", "Họ và tên", "Giới tính", "Ngày sinh", "SĐT", "Email", "Chức vụ", "Trạng thái"};
         }
         modelNhanVien.setDataVector(null, cotNV);
 
@@ -589,12 +588,12 @@ public class EmployeeManagementPanel extends JPanel {
             if (isChuCuaHang) {
                 modelNhanVien.addRow(new Object[]{
                     nv.maNV, nv.hoTen, nv.gioiTinh, ngaySinhHienThi, sdtHienThi, emailHienThi,
-                    nv.chucVu, nv.caLamViec, nv.trangThai, "Chi tiết   Sửa"
+                    nv.chucVu, nv.trangThai, "Chi tiết   Sửa"
                 });
             } else {
                 modelNhanVien.addRow(new Object[]{
                     nv.maNV, nv.hoTen, nv.gioiTinh, ngaySinhHienThi, sdtHienThi, emailHienThi,
-                    nv.chucVu, nv.caLamViec, nv.trangThai
+                    nv.chucVu, nv.trangThai
                 });
             }
             count++;
@@ -649,18 +648,18 @@ public class EmployeeManagementPanel extends JPanel {
 
         int colCount = tableNhanVien.getColumnCount();
         for (int i = 0; i < colCount; i++) {
-            if (i == 2 || i == 3 || i == 6 || i == 7) {
+            if (i == 2 || i == 3 || i == 6) {
                 tableNhanVien.getColumnModel().getColumn(i).setCellRenderer(canGiua);
             } else {
                 tableNhanVien.getColumnModel().getColumn(i).setCellRenderer(canTrai);
             }
         }
 
-        tableNhanVien.getColumnModel().getColumn(8).setCellRenderer(new BadgeTrangThaiRenderer());
+        tableNhanVien.getColumnModel().getColumn(7).setCellRenderer(new BadgeTrangThaiRenderer());
 
-        if (isChuCuaHang && colCount > 9) {
-            tableNhanVien.getColumnModel().getColumn(9).setCellRenderer(new ThaoTacNhanVienRenderer());
-            tableNhanVien.getColumnModel().getColumn(9).setPreferredWidth(125);
+        if (isChuCuaHang && colCount > 8) {
+            tableNhanVien.getColumnModel().getColumn(8).setCellRenderer(new ThaoTacNhanVienRenderer());
+            tableNhanVien.getColumnModel().getColumn(8).setPreferredWidth(125);
         }
     }
 
@@ -800,7 +799,7 @@ public class EmployeeManagementPanel extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
 
-        JPanel pContent = new JPanel(new GridLayout(9, 2, 10, 10));
+        JPanel pContent = new JPanel(new GridLayout(8, 2, 10, 10));
         pContent.setBorder(new EmptyBorder(20, 24, 20, 24));
 
         String maTuDong = "NV241018" + String.format("%03d", danhSachNV.size() + 1);
@@ -813,7 +812,6 @@ public class EmployeeManagementPanel extends JPanel {
         JTextField txtSdt = new JTextField();
         JTextField txtEmail = new JTextField();
         JComboBox<String> cbChucVuInput = new JComboBox<>(new String[]{"Chăm sóc", "Thu ngân"});
-        JComboBox<String> cbCaInput = new JComboBox<>(new String[]{"Ca sáng", "Ca tối"});
         JTextField txtMatKhauBanDau = new JTextField("PetBite@123");
 
         pContent.add(new JLabel("Mã nhân viên:"));
@@ -830,8 +828,6 @@ public class EmployeeManagementPanel extends JPanel {
         pContent.add(txtEmail);
         pContent.add(new JLabel("Chức vụ:"));
         pContent.add(cbChucVuInput);
-        pContent.add(new JLabel("Ca làm việc:"));
-        pContent.add(cbCaInput);
         pContent.add(new JLabel("Mật khẩu ban đầu:"));
         pContent.add(txtMatKhauBanDau);
 
@@ -863,7 +859,7 @@ public class EmployeeManagementPanel extends JPanel {
                 sdt,
                 email,
                 (String) cbChucVuInput.getSelectedItem(),
-                (String) cbCaInput.getSelectedItem(),
+                "",
                 "Hoạt động"
             );
             danhSachNV.add(nvMoi);
@@ -939,7 +935,7 @@ public class EmployeeManagementPanel extends JPanel {
         dialog.setLocationRelativeTo(this);
         dialog.setLayout(new BorderLayout());
 
-        JPanel pContent = new JPanel(new GridLayout(8, 2, 10, 10));
+        JPanel pContent = new JPanel(new GridLayout(7, 2, 10, 10));
         pContent.setBorder(new EmptyBorder(20, 24, 20, 24));
 
         JTextField txtTen = new JTextField(nv.hoTen);
@@ -950,8 +946,6 @@ public class EmployeeManagementPanel extends JPanel {
         JTextField txtEmail = new JTextField(nv.email);
         JComboBox<String> cbChucVuInput = new JComboBox<>(new String[]{"Chăm sóc", "Thu ngân"});
         cbChucVuInput.setSelectedItem(nv.chucVu);
-        JComboBox<String> cbCaInput = new JComboBox<>(new String[]{"Ca sáng", "Ca tối"});
-        cbCaInput.setSelectedItem(nv.caLamViec);
         JComboBox<String> cbTrangThaiInput = new JComboBox<>(new String[]{"Hoạt động", "Bị khóa"});
         cbTrangThaiInput.setSelectedItem(nv.trangThai);
 
@@ -967,8 +961,6 @@ public class EmployeeManagementPanel extends JPanel {
         pContent.add(txtEmail);
         pContent.add(new JLabel("Chức vụ:"));
         pContent.add(cbChucVuInput);
-        pContent.add(new JLabel("Ca làm việc:"));
-        pContent.add(cbCaInput);
         pContent.add(new JLabel("Trạng thái:"));
         pContent.add(cbTrangThaiInput);
 
@@ -989,7 +981,6 @@ public class EmployeeManagementPanel extends JPanel {
             nv.soDienThoai = txtSdt.getText().trim();
             nv.email = txtEmail.getText().trim();
             nv.chucVu = (String) cbChucVuInput.getSelectedItem();
-            nv.caLamViec = (String) cbCaInput.getSelectedItem();
             nv.trangThai = (String) cbTrangThaiInput.getSelectedItem();
 
             for (TaiKhoanItem tk : danhSachTK) {
