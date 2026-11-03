@@ -323,7 +323,7 @@ public class BanHangPanel extends JPanel implements ActionListener {
         JLabel lbl = new JLabel(title);
         lbl.setFont(new Font("SansSerif", Font.BOLD, 14));
         lbl.setForeground(new Color(18, 57, 88));
-        lbl.setAlignmentX(Component.LEFT_ALIGNMENT); // Đảm bảo tiêu đề card bám sát lề trái
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT); 
         
         panel.add(lbl);
         panel.add(Box.createVerticalStrut(8));

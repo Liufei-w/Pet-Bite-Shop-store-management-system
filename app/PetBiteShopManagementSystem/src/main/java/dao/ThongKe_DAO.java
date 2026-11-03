@@ -1,7 +1,12 @@
 package dao;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+
 import connectDB.ConnectDB;
 import entity.SanPham;
 
@@ -53,7 +58,7 @@ public class ThongKe_DAO {
         return data;
     }
 
-    /** 2. Thống kê số lượng sản phẩm bán thực tế (UC034) - Đã sửa lỗi lọc theo ngày tháng */
+    /** 2. Thống kê số lượng sản phẩm bán thực tế  */
     public ArrayList<Object[]> getThongKeSanPham(String tuNgay, String denNgay) {
         ArrayList<Object[]> data = new ArrayList<>();
         String sql = "SELECT s.maSP, s.tenSP, s.donViTinh, " +
@@ -79,7 +84,7 @@ public class ThongKe_DAO {
         try {
             Connection con = ConnectDB.getInstance().getConnection();
             PreparedStatement pst = con.prepareStatement(sql);
-            // Truyền tham số ngày tháng cho cả 2 bảng con (bán hàng và trả hàng)
+        
             pst.setString(1, tuNgay);
             pst.setString(2, denNgay);
             pst.setString(3, tuNgay);
@@ -108,7 +113,6 @@ public class ThongKe_DAO {
 
     public ArrayList<Object[]> getThongKeDichVu(String tuNgay, String denNgay) {
         ArrayList<Object[]> data = new ArrayList<>();
-        // Sửa 'giaDV' thành 'giaDichVu' cho khớp với cấu trúc bảng trong CSDL
         String sql = "SELECT dv.maDV, dv.tenDV, dv.giaDichVu, " +
                      "       COUNT(ct.maLichHen) AS soLuot, " +
                      "       (COUNT(ct.maLichHen) * dv.giaDichVu) AS tongDoanhThuDV " +
@@ -131,7 +135,7 @@ public class ThongKe_DAO {
                     stt++,
                     rs.getString("maDV"),
                     rs.getString("tenDV"),
-                    rs.getDouble("giaDichVu"), // Sửa ở đây luôn để lấy đúng tên cột
+                    rs.getDouble("giaDichVu"), 
                     rs.getInt("soLuot"),
                     rs.getDouble("tongDoanhThuDV")
                 };
@@ -143,7 +147,7 @@ public class ThongKe_DAO {
         return data;
     }
 
-    /** 4. Báo cáo tồn kho (UC036) */
+    /** 4. Báo cáo tồn kho */
     public ArrayList<SanPham> getBaoCaoTonKho() {
         ArrayList<SanPham> dsSanPham = new ArrayList<>();
         String sql = "SELECT s.maSP, s.tenSP, s.donViTinh, s.giaNhap, s.tienLoi, s.soLuongTon, s.trangThai " +
